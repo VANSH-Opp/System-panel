@@ -1,0 +1,2139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
+    <title>SYSTEM PANEL</title>
+    <style>
+        :root {
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #12121a;
+            --bg-tertiary: #1a1a25;
+            --accent-primary: #7c5cff;
+            --accent-secondary: #5c3dff;
+            --accent-glow: rgba(124, 92, 255, 0.4);
+            --text-primary: #ffffff;
+            --text-secondary: #a0a0b0;
+            --text-muted: #6a6a7a;
+            --success: #00dc82;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --border-color: rgba(255, 255, 255, 0.08);
+            --glass-bg: rgba(18, 18, 26, 0.95);
+            --shadow-lg: 0 10px 40px rgba(0, 0, 0, 0.5);
+            --radius-sm: 6px;
+            --radius-md: 10px;
+            --radius-lg: 14px;
+            --transition: all 0.3s ease;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', 'Roboto', sans-serif;
+            background: var(--bg-primary);
+            background-image: 
+                radial-gradient(ellipse at top, #1a1a2e 0%, transparent 50%),
+                radial-gradient(ellipse at bottom, #0f0f1a 0%, transparent 50%);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 20px;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .system-container {
+            width: 550px;
+            max-width: 550px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-lg);
+            overflow: hidden;
+        }
+
+        .panel-header {
+            background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
+            padding: 16px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .panel-title {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--accent-primary);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .header-actions { display: flex; gap: 6px; }
+
+        .header-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            padding: 5px 10px;
+            border-radius: var(--radius-sm);
+            font-size: 0.7rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        .header-btn:hover {
+            background: rgba(124, 92, 255, 0.15);
+            border-color: var(--accent-primary);
+            color: var(--text-primary);
+        }
+
+        .section {
+            padding: 18px 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .section:last-child { border-bottom: none; }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 14px;
+            cursor: pointer;
+            user-select: none;
+        }
+        .section-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .section-title .toggle-icon {
+            color: var(--text-muted);
+            font-size: 0.7rem;
+            transition: transform 0.25s;
+        }
+        .section-title.collapsed .toggle-icon { transform: rotate(-90deg); }
+        .section-status {
+            font-size: 0.7rem;
+            color: var(--success);
+            background: rgba(0, 220, 130, 0.1);
+            padding: 2px 8px;
+            border-radius: 20px;
+        }
+        .section-content { transition: max-height 0.3s ease; }
+        .section-content.collapsed { display: none; }
+
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+        .status-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 12px;
+            position: relative;
+        }
+        .status-label {
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            margin-bottom: 4px;
+        }
+        .status-value {
+            font-size: 0.85rem;
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+        .status-value.highlight { color: var(--accent-primary); }
+        .status-value.success { color: var(--success); }
+        .host-name-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .action-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.65rem;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        .action-btn:hover {
+            border-color: var(--accent-primary);
+            color: var(--accent-primary);
+        }
+        .realm-progress-mini {
+            height: 4px;
+            background: rgba(255,255,255,0.08);
+            border-radius: 2px;
+            margin-top: 6px;
+            overflow: hidden;
+        }
+        .realm-progress-fill {
+            height: 100%;
+            background: var(--accent-primary);
+            border-radius: 2px;
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+
+        .cultivation-container { margin-top: 14px; }
+        .cultivation-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+        .cultivation-label { font-size: 0.75rem; color: var(--text-secondary); }
+        .cultivation-value { font-size: 0.75rem; color: var(--accent-primary); font-weight: 600; }
+        .progress-track {
+            height: 6px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 3px;
+            overflow: hidden;
+            margin-bottom: 8px;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+            border-radius: 3px;
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+        .cultivation-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid var(--border-color);
+            gap: 12px;
+        }
+        .cultivate-btn {
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            border: none;
+            color: white;
+            padding: 8px 20px;
+            border-radius: var(--radius-md);
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            flex: 1;
+            text-align: center;
+        }
+        .cultivate-btn:hover { box-shadow: 0 0 20px var(--accent-glow); }
+        .auto-toggle-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 8px 20px;
+            border-radius: var(--radius-md);
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            min-width: 80px;
+            text-align: center;
+        }
+        .auto-toggle-btn.active {
+            background: var(--success);
+            border-color: var(--success);
+            color: black;
+        }
+
+        .void-energy-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        .void-energy-label { font-size: 0.75rem; color: var(--text-secondary); }
+        .void-energy-value { font-size: 1.3rem; font-weight: 700; color: var(--accent-primary); }
+        .void-rate { font-size: 0.7rem; color: var(--text-muted); text-align: right; }
+        .void-description {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: var(--radius-md);
+            border-left: 2px solid var(--accent-primary);
+        }
+
+        .list-container {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+        .list-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 10px;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: var(--radius-sm);
+            margin-bottom: 6px;
+        }
+        .list-item:last-child { margin-bottom: 0; }
+        .list-item-name { font-size: 0.8rem; color: var(--text-primary); }
+        .list-item-rank {
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            background: rgba(255, 255, 255, 0.05);
+            padding: 2px 5px;
+            border-radius: var(--radius-sm);
+            margin-left: 6px;
+        }
+        .add-btn {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px dashed var(--border-color);
+            color: var(--text-secondary);
+            padding: 10px;
+            border-radius: var(--radius-md);
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin-bottom: 6px;
+            transition: var(--transition);
+        }
+        .add-btn:hover {
+            background: rgba(124, 92, 255, 0.1);
+            border-color: var(--accent-primary);
+            color: var(--accent-primary);
+        }
+
+        .core-stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+        .stat-card {
+            background: linear-gradient(135deg, rgba(124, 92, 255, 0.1) 0%, rgba(92, 61, 255, 0.05) 100%);
+            border: 1px solid rgba(124, 92, 255, 0.2);
+            border-radius: var(--radius-md);
+            padding: 14px;
+            text-align: center;
+        }
+        .stat-value { font-size: 1.2rem; font-weight: 700; color: var(--accent-primary); margin-bottom: 3px; }
+        .stat-label { font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; }
+        .system-level-row {
+            text-align: center;
+            margin-bottom: 14px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: var(--radius-md);
+        }
+        .system-level-text { font-size: 0.75rem; color: var(--text-secondary); }
+        .system-level-value { font-size: 1rem; font-weight: 700; color: var(--warning); }
+        .upgrade-btn {
+            width: 100%;
+            background: linear-gradient(135deg, var(--warning), #d97706);
+            border: none;
+            color: white;
+            padding: 12px;
+            border-radius: var(--radius-md);
+            font-size: 0.85rem;
+            font-weight: 700;
+            cursor: pointer;
+            text-transform: uppercase;
+        }
+        .upgrade-btn:hover { box-shadow: 0 0 25px rgba(245, 158, 11, 0.4); }
+
+        .feature-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 12px;
+            margin-top: 12px;
+        }
+        .feature-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        .feature-title { font-size: 0.8rem; font-weight: 600; color: var(--accent-primary); }
+        .feature-desc { font-size: 0.7rem; color: var(--text-muted); margin-bottom: 8px; }
+
+        .pill-toggle {
+            position: relative;
+            width: 38px;
+            height: 20px;
+            flex-shrink: 0;
+        }
+        .pill-toggle input { opacity: 0; width: 0; height: 0; }
+        .pill-slider {
+            position: absolute;
+            inset: 0;
+            border-radius: 10px;
+            background: #333;
+            border: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .pill-slider::before {
+            content: '';
+            position: absolute;
+            left: 3px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 13px;
+            height: 13px;
+            border-radius: 50%;
+            background: #888;
+            transition: 0.2s;
+        }
+        .pill-toggle input:checked ~ .pill-slider {
+            background: rgba(0, 220, 130, 0.2);
+            border-color: var(--success);
+        }
+        .pill-toggle input:checked ~ .pill-slider::before {
+            background: var(--success);
+            left: calc(100% - 16px);
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.9);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal-content {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 20px;
+            width: 90%;
+            max-width: 400px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .modal-input, .modal-textarea {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 10px;
+            border-radius: var(--radius-md);
+            font-size: 0.85rem;
+            margin-bottom: 12px;
+        }
+        select.modal-input { -webkit-appearance: none; appearance: none; }
+        .modal-input:focus, .modal-textarea:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+        }
+        .modal-actions { display: flex; gap: 8px; margin-top: 15px; }
+        .modal-btn {
+            flex: 1;
+            padding: 10px;
+            border-radius: var(--radius-md);
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .modal-btn-primary { background: var(--accent-primary); border: none; color: white; }
+        .modal-btn-secondary { background: transparent; border: 1px solid var(--border-color); color: var(--text-secondary); }
+        .modal-btn-danger { background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.3); color: var(--danger); }
+
+        .notification-container {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10000;
+            width: 90%;
+            max-width: 350px;
+            pointer-events: none;
+        }
+        .notification-card {
+            pointer-events: auto;
+            background: rgba(18, 18, 26, 0.95);
+            border-left: 4px solid var(--accent-primary);
+            backdrop-filter: blur(10px);
+            color: var(--text-primary);
+            padding: 10px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            animation: slideIn 0.3s ease-out;
+            cursor: grab;
+            touch-action: pan-y;
+            user-select: none;
+            will-change: transform, opacity;
+        }
+        .notification-card.swiping { transition: none; }
+        .notification-card.success { border-left-color: var(--success); }
+        .notification-card.error { border-left-color: var(--danger); }
+        .notification-card.warning { border-left-color: var(--warning); }
+        .notification-card.info { border-left-color: var(--accent-primary); }
+        .notif-title { font-weight: bold; margin-bottom: 3px; font-size: 13px; }
+        .notif-message { font-size: 11px; opacity: 0.9; }
+        .notif-time { font-size: 9px; opacity: 0.6; margin-top: 3px; text-align: right; }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(100%); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .save-indicator {
+            position: fixed;
+            bottom: 8px; right: 8px;
+            font-size: 9px;
+            color: var(--accent-primary);
+            background: rgba(0,0,0,0.6);
+            padding: 3px 6px;
+            border-radius: 4px;
+            opacity: 0;
+            transition: 0.3s;
+            z-index: 999;
+        }
+        .save-indicator.visible { opacity: 1; animation: pulse 0.5s; }
+        @keyframes pulse { 0% { opacity: 0; } 50% { opacity: 1; } 100% { opacity: 0; } }
+
+        .eternal-text {
+            border-left: 3px solid var(--accent-primary);
+            padding: 10px;
+            margin: 10px 0;
+            background: rgba(124,92,255,0.05);
+            font-style: italic;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            line-height: 1.4;
+        }
+
+        .settings-collapsible-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            cursor: pointer;
+            user-select: none;
+            font-weight: 600;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+        .settings-collapsible-content { display: none; }
+        .settings-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+        }
+        .settings-row:last-child { border-bottom: none; }
+        .filter-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px;
+            background: rgba(255,255,255,0.02);
+            border-radius: 6px;
+            margin: 4px 0;
+            cursor: pointer;
+        }
+
+        .log-item {
+            padding: 8px 10px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            gap: 10px;
+            align-items: flex-start;
+            font-size: 0.75rem;
+        }
+        .log-item:last-child { border-bottom: none; }
+        .log-dot {
+            width: 6px; height: 6px; border-radius: 50%;
+            margin-top: 5px; flex-shrink: 0;
+        }
+        .log-dot.success { background: var(--success); }
+        .log-dot.info { background: var(--accent-primary); }
+        .log-dot.warning { background: var(--warning); }
+        .log-dot.error { background: var(--danger); }
+
+        .taiji-css {
+            width: 60px; height: 60px; margin: 10px auto;
+            background: linear-gradient(90deg, black 50%, white 50%);
+            border-radius: 50%;
+            animation: spin 6s linear infinite;
+        }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+
+        .upgrade-option {
+            padding: 10px; margin: 8px 0;
+            background: rgba(255,255,255,0.03);
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        .upgrade-option:hover { background: rgba(124,92,255,0.1); border-color: var(--accent-primary); }
+        .upgrade-option.heaven { background: rgba(255,0,255,0.1); border-color: #f0f; }
+        .heaven-badge { background: #f0f; color: black; padding: 2px 5px; border-radius: 4px; font-size: 9px; margin-left: 4px; }
+        .preset-spells { display: flex; gap: 6px; margin: 8px 0; }
+        .preset-btn {
+            background: rgba(124,92,255,0.15);
+            border: 1px solid var(--accent-primary);
+            padding: 4px 8px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            cursor: pointer;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin: 10px 0;
+        }
+        .stat-item {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 10px;
+            text-align: center;
+        }
+        .stat-item .num { font-size: 1.1rem; font-weight: 700; color: var(--accent-primary); }
+        .stat-item .lbl { font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; margin-top: 2px; }
+
+        /* --- TABS --- */
+        .tab-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+        }
+        .tab-btn {
+            background: transparent;
+            border: 1px solid transparent;
+            color: var(--text-secondary);
+            padding: 6px 14px;
+            border-radius: var(--radius-sm);
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        .tab-btn:hover {
+            color: var(--text-primary);
+        }
+        .tab-btn.active {
+            background: rgba(124, 92, 255, 0.15);
+            border-color: var(--accent-primary);
+            color: var(--accent-primary);
+        }
+
+        /* --- RADAR ANIMATION --- */
+        .radar-container {
+            position: relative;
+            width: 180px;
+            height: 180px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(0, 220, 130, 0.05) 0%, rgba(0, 50, 20, 0.4) 100%);
+            border: 2px solid var(--success);
+            margin: 15px auto;
+            overflow: hidden;
+            box-shadow: 0 0 20px rgba(0, 220, 130, 0.15);
+        }
+        .radar-grid {
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            border: 1px solid rgba(0, 220, 130, 0.2);
+            background-image:
+                linear-gradient(rgba(0, 220, 130, 0.2) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 220, 130, 0.2) 1px, transparent 1px);
+            background-size: 20px 20px;
+            background-position: center center;
+        }
+        .radar-crosshair {
+            position: absolute;
+            top: 50%; left: 0; right: 0;
+            height: 1px; background: rgba(0, 220, 130, 0.4);
+        }
+        .radar-crosshair.vertical {
+            top: 0; bottom: 0; left: 50%; right: auto;
+            width: 1px; height: 100%;
+        }
+        .radar-sweep {
+            position: absolute;
+            top: 50%; left: 50%;
+            width: 100%; height: 100%;
+            background: conic-gradient(from 0deg, transparent 70%, rgba(0, 220, 130, 0.6) 100%);
+            transform-origin: 0 0;
+            animation: radar-spin 2s linear infinite;
+        }
+        @keyframes radar-spin { 100% { transform: rotate(360deg); } }
+        
+        .radar-blip {
+            position: absolute;
+            width: 6px; height: 6px;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            opacity: 0;
+            animation: blip-fade 1.5s infinite;
+        }
+        @keyframes blip-fade {
+            0%, 100% { opacity: 0; box-shadow: none; }
+            50% { opacity: 1; box-shadow: 0 0 8px currentColor; }
+        }
+        
+        .scan-log {
+            max-height: 200px;
+            overflow-y: auto;
+            font-size: 0.75rem;
+            background: rgba(255,255,255,0.02);
+            padding: 12px;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-color);
+            margin-bottom: 10px;
+        }
+
+        /* --- DEDUCTION (Bagua & Coins) --- */
+        .bagua-wrapper {
+            position: relative; width: 140px; height: 140px; margin: 15px auto;
+            display: flex; justify-content: center; align-items: center;
+        }
+        .bagua-ring {
+            position: absolute; inset: 0; border-radius: 50%;
+            border: 2px dashed var(--accent-primary);
+            border-left: 2px solid var(--accent-secondary);
+            border-right: 2px solid var(--accent-secondary);
+            animation: spin 6s linear infinite;
+        }
+        .coin-container { display: flex; gap: 15px; justify-content: center; margin-bottom: 15px; }
+        .iching-coin {
+            width: 32px; height: 32px; border-radius: 50%;
+            background: #d4af37; border: 2px solid #b58500;
+            display: flex; justify-content: center; align-items: center;
+            box-shadow: inset 0 0 5px rgba(0,0,0,0.5);
+            animation: coin-flip 0.4s infinite linear;
+        }
+        .iching-coin::after { content: ''; width: 10px; height: 10px; background: var(--bg-secondary); border-radius: 2px; }
+        @keyframes coin-flip { 0% { transform: rotateY(0deg); } 100% { transform: rotateY(360deg); } }
+
+        /* --- LAW INSIGHT (Heaven & Earth) --- */
+        .heaven-earth-container {
+            position: relative; width: 100%; height: 160px; border-radius: var(--radius-md);
+            background: linear-gradient(to bottom, #0f172a 0%, #1e1b4b 30%, #431407 70%, #1c1917 100%);
+            overflow: hidden; margin-top: 15px; margin-bottom: 20px; border: 1px solid var(--accent-primary);
+            box-shadow: inset 0 0 30px rgba(0,0,0,0.8);
+        }
+        .dao-line {
+            position: absolute; background: var(--warning);
+            box-shadow: 0 0 10px var(--warning), 0 0 20px var(--warning);
+            opacity: 0.6; border-radius: 5px;
+        }
+        .dao-line.horizontal { width: 100%; height: 2px; left: 0; animation: dao-float-v 3s ease-in-out infinite alternate; }
+        .dao-line.vertical { width: 2px; height: 100%; top: 0; animation: dao-float-h 4s ease-in-out infinite alternate; }
+        @keyframes dao-float-v { 0% { top: 10%; opacity: 0.2;} 50% { opacity: 0.8;} 100% { top: 90%; opacity: 0.2;} }
+        @keyframes dao-float-h { 0% { left: 10%; opacity: 0.2;} 50% { opacity: 0.8;} 100% { left: 90%; opacity: 0.2;} }
+        .insight-core {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 40px; height: 40px; background: radial-gradient(circle, #fff, rgba(245, 158, 11, 0.5), transparent);
+            border-radius: 50%; animation: pulse 1.5s infinite;
+        }
+
+        /* --- HEAVENLY CREATION FORGE --- */
+        .cauldron-display {
+            height: 140px; display: flex; justify-content: center; align-items: center;
+            background: radial-gradient(circle, rgba(124,92,255,0.1) 0%, transparent 70%);
+            border-radius: var(--radius-md); margin-bottom: 15px; position: relative; overflow: hidden;
+        }
+        .yin-yang-forge {
+            width: 80px; height: 80px; border-radius: 50%;
+            background: linear-gradient(90deg, #fff 50%, #111 50%);
+            border: 2px solid var(--accent-primary);
+            animation: spin 4s linear infinite;
+            position: relative;
+            box-shadow: 0 0 20px rgba(124, 92, 255, 0.4);
+            z-index: 2;
+        }
+        .yin-yang-forge::before {
+            content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+            width: 40px; height: 40px; border-radius: 50%; background: #fff; border: 10px solid #111; box-sizing: border-box;
+        }
+        .yin-yang-forge::after {
+            content: ''; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);
+            width: 40px; height: 40px; border-radius: 50%; background: #111; border: 10px solid #fff; box-sizing: border-box;
+        }
+        .forge-particles {
+            position: absolute; width: 100%; height: 100%; top: 0; left: 0;
+            pointer-events: none; opacity: 0; transition: opacity 0.5s;
+            background: radial-gradient(circle, transparent 20%, #0a0a0f 100%), 
+                        conic-gradient(from 0deg, transparent 70%, var(--accent-primary) 100%);
+            animation: spin 2s linear infinite reverse;
+            z-index: 1;
+        }
+        .forge-active .yin-yang-forge {
+            animation: spin 0.5s linear infinite, forge-pulse 0.5s infinite alternate;
+        }
+        .forge-active .forge-particles { opacity: 0.6; }
+        @keyframes forge-pulse {
+            0% { transform: scale(1); box-shadow: 0 0 20px rgba(124,92,255,0.5); }
+            100% { transform: scale(1.3); box-shadow: 0 0 60px rgba(124,92,255,1), 0 0 40px var(--success); }
+        }
+
+        .material-pool {
+            display: flex; flex-wrap: wrap; gap: 8px; max-height: 160px; overflow-y: auto; 
+            padding: 10px; background: rgba(0,0,0,0.2); border-radius: var(--radius-md); 
+            border: 1px solid var(--border-color);
+        }
+        .mat-pill {
+            padding: 6px 12px; border-radius: 20px; font-size: 0.75rem; cursor: pointer; 
+            background: rgba(255,255,255,0.05); border: 1px solid transparent; 
+            transition: 0.2s; user-select: none;
+        }
+        .mat-pill.selected {
+            background: rgba(124, 92, 255, 0.2); border-color: var(--accent-primary); 
+            color: white; box-shadow: 0 0 10px var(--accent-glow);
+        }
+        .mat-pill.spell { border-left: 2px solid var(--accent-secondary); }
+        .mat-pill.tech { border-left: 2px solid var(--success); }
+        .mat-pill.item { border-left: 2px solid var(--warning); }
+
+
+
+        .login-screen {
+            width: 100%;
+            min-height: calc(100vh - 40px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px 0;
+        }
+        .login-card {
+            width: min(100%, 420px);
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-lg), 0 0 60px rgba(124, 92, 255, 0.12);
+            padding: 28px;
+            position: relative;
+            overflow: hidden;
+        }
+        .login-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at top right, rgba(124, 92, 255, 0.18), transparent 45%);
+            pointer-events: none;
+        }
+        .login-title {
+            color: var(--accent-primary);
+            font-size: 1.15rem;
+            font-weight: 800;
+            letter-spacing: 2px;
+            text-align: center;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+            position: relative;
+        }
+        .login-subtitle {
+            color: var(--text-secondary);
+            font-size: 0.78rem;
+            text-align: center;
+            margin-bottom: 22px;
+            position: relative;
+        }
+        .login-form {
+            display: grid;
+            gap: 14px;
+            position: relative;
+        }
+        .login-label {
+            display: block;
+            color: var(--text-muted);
+            font-size: 0.68rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+        }
+        .login-input {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            color: var(--text-primary);
+            font-size: 0.95rem;
+            padding: 12px 14px;
+            transition: var(--transition);
+        }
+        .login-input:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 3px rgba(124, 92, 255, 0.16);
+        }
+        .login-btn {
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            border: none;
+            border-radius: var(--radius-md);
+            color: white;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 800;
+            letter-spacing: 1px;
+            margin-top: 4px;
+            padding: 13px;
+            text-transform: uppercase;
+            transition: var(--transition);
+        }
+        .login-btn:hover { box-shadow: 0 0 24px var(--accent-glow); transform: translateY(-1px); }
+        .login-error {
+            min-height: 18px;
+            color: var(--danger);
+            font-size: 0.74rem;
+            text-align: center;
+        }
+        .system-container.auth-locked { display: none; }
+
+        @media (max-width: 550px) {
+            .core-stats { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+<div class="login-screen" id="loginScreen">
+    <div class="login-card">
+        <h1 class="login-title">⟦ System Access ⟧</h1>
+        <p class="login-subtitle">Enter your creator credentials to unlock the panel.</p>
+        <form class="login-form" id="loginForm" autocomplete="off">
+            <div>
+                <label class="login-label" for="loginId">ID</label>
+                <input class="login-input" id="loginId" type="text" placeholder="Enter ID" autocomplete="username" required>
+            </div>
+            <div>
+                <label class="login-label" for="loginPass">Pass</label>
+                <input class="login-input" id="loginPass" type="password" placeholder="Enter pass" autocomplete="current-password" required>
+            </div>
+            <button class="login-btn" type="submit">Enter System</button>
+            <div class="login-error" id="loginError" aria-live="polite"></div>
+        </form>
+    </div>
+</div>
+<div class="system-container auth-locked" id="mainPanel">
+    <header class="panel-header">
+        <h1 class="panel-title">⟦ SYSTEM PANEL ⟧</h1>
+        <div class="header-actions">
+            <button class="header-btn" onclick="openLogAndStats('logs')">[DATA]</button>
+            <button class="header-btn" onclick="openSettings()">[SET]</button>
+        </div>
+    </header>
+
+    <section class="section">
+        <div class="section-header" onclick="toggleSection(this)">
+            <h2 class="section-title">Host Status <span class="toggle-icon">▼</span></h2>
+        </div>
+        <div class="section-content">
+            <div class="status-grid">
+                <div class="status-card">
+                    <div class="status-label">Name</div>
+                    <div class="host-name-row">
+                        <span id="hostNameDisplay" style="font-weight:600;">VANSH</span>
+                        <button class="action-btn" onclick="openRenameUI()">Rename</button>
+                    </div>
+                </div>
+                <div class="status-card">
+                    <div class="status-label">Realm</div>
+                    <div class="status-value highlight" id="realmDisplay">Awakening Realm Level 1</div>
+                    <div class="realm-progress-mini"><div class="realm-progress-fill" id="realmProgressFill" style="width:0%"></div></div>
+                </div>
+                <div class="status-card">
+                    <div class="status-label">Lifespan</div>
+                    <div class="status-value success">Infinite</div>
+                </div>
+                <div class="status-card">
+                    <div class="status-label">Talent</div>
+                    <div class="status-value" id="talentDisplay">All-Encompassing</div>
+                    <div class="feature-desc" style="margin-top:4px;font-size:0.65rem;">Cultivate anything – depends only on how much you can grind</div>
+                </div>
+            </div>
+            <div class="cultivation-container">
+                <div class="cultivation-row">
+                    <span class="cultivation-label">Cultivation EXP</span>
+                    <span class="cultivation-value" id="expText">0 / 100</span>
+                </div>
+                <div class="progress-track"><div class="progress-fill" id="expFill"></div></div>
+                <div class="cultivation-controls">
+                    <button class="cultivate-btn" id="cultivateBtn">Cultivate</button>
+                    <button class="auto-toggle-btn" id="autoCultivateBtn">Auto: OFF</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section">
+        <div class="section-header" onclick="toggleSection(this)">
+            <h2 class="section-title">Void Auto-Absorption <span class="toggle-icon">▼</span></h2>
+            <span class="section-status">[ACTIVE]</span>
+        </div>
+        <div class="section-content">
+            <div class="void-energy-row">
+                <div>
+                    <div class="void-energy-label">Void Energy</div>
+                    <div class="void-energy-value" id="voidEnergyValue">0</div>
+                </div>
+                <div class="void-rate" id="absorptionRateInfo">Absorbing 1-3 per 5 sec</div>
+            </div>
+            <div class="progress-track" style="margin-bottom:10px;"><div id="voidBarFill" style="height:6px;width:0%;background:linear-gradient(90deg,var(--accent-primary),#4ef2ff);border-radius:3px;"></div></div>
+            <div class="void-description">Feed items, spells, or techniques to the void.</div>
+            
+            <button class="add-btn" style="margin-top:12px;" onclick="openMasterDevourUI()">Mystical Devouring Void</button>
+            <button class="add-btn" onclick="collectVoidEnergy()">Collect Void Energy → EP</button>
+            
+        </div>
+    </section>
+
+    <section class="section">
+        <div class="section-header" onclick="toggleSection(this)">
+            <h2 class="section-title">Cultivation Methods <span class="toggle-icon">▼</span></h2>
+        </div>
+        <div class="section-content">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                <span style="font-size:0.75rem; color:var(--accent-primary); font-weight:600; text-transform:uppercase;">Techniques</span>
+                <div style="display:flex; gap:6px;">
+                    <button class="action-btn" onclick="openAddTechniqueUI()">+ Add</button>
+                    <button class="action-btn" onclick="openTechniqueManager()">Manage</button>
+                </div>
+            </div>
+            <div class="list-container" id="techniquesListContainer"></div>
+            
+            <hr style="border:none; border-top:1px solid var(--border-color); margin:12px 0;">
+            
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                <span style="font-size:0.75rem; color:var(--accent-primary); font-weight:600; text-transform:uppercase;">Spells</span>
+                <div style="display:flex; gap:6px;">
+                    <button class="action-btn" onclick="openAddSpellUI()">+ Add</button>
+                    <button class="action-btn" onclick="openSpellManager()">Manage</button>
+                </div>
+            </div>
+            <div class="list-container" id="spellsListContainer"></div>
+        </div>
+    </section>
+
+    <section class="section" id="featuresSection">
+        <div class="section-header" onclick="toggleSection(this)">
+            <h2 class="section-title">System Features <span class="toggle-icon">▼</span></h2>
+        </div>
+        <div class="section-content" id="featuresContainer"></div>
+    </section>
+
+    <section class="section">
+        <div class="section-header" onclick="toggleSection(this)">
+            <h2 class="section-title">System Core <span class="toggle-icon">▼</span></h2>
+        </div>
+        <div class="section-content">
+            <div class="core-stats">
+                <div class="stat-card"><div class="stat-value" id="epValue">30000</div><div class="stat-label">Origin Points (EP)</div></div>
+                <div class="stat-card"><div class="stat-value" id="apValue">50</div><div class="stat-label">Achievement Points (AP)</div></div>
+            </div>
+            <div class="system-level-row">
+                <div class="system-level-text">System Level: <span class="system-level-value" id="systemLevelValue">1</span></div>
+            </div>
+            <button class="upgrade-btn" id="systemUpgradeBtn" onclick="openUpgradeChoice()">Upgrade System</button>
+        </div>
+    </section>
+</div>
+
+<div class="modal-overlay" id="globalOverlay"><div class="modal-content" id="overlayContent"></div></div>
+<div class="notification-container" id="notifContainer"></div>
+<div class="save-indicator" id="saveIndicator">[SAVED]</div>
+
+<script>
+// ──────────────────────────────────────────────
+//  FULL SYSTEM PANEL v3 + REALM PROGRESS + STATS + SOUND
+// ──────────────────────────────────────────────
+
+const LOGIN_ID_HASH = "5f3270038d32b4cb02d8497c5f07e37e507fee2d24e57453bfa3ae58cd436030";
+const LOGIN_PASS_HASH = "e86bbd43206627907646dd63c1dbc9edd2f54fd4918603eab588fae216a0b571";
+
+async function hashCredential(value){
+    if(window.crypto?.subtle && window.TextEncoder){
+        const bytes = new TextEncoder().encode(value);
+        const digest = await crypto.subtle.digest('SHA-256', bytes);
+        return [...new Uint8Array(digest)].map(byte=>byte.toString(16).padStart(2,'0')).join('');
+    }
+    return sha256Fallback(value);
+}
+function sha256Fallback(value){
+    const rotateRight=(n,x)=>(x>>>n)|(x<<(32-n));
+    const utf8=unescape(encodeURIComponent(value));
+    const words=[];
+    for(let i=0;i<utf8.length;i++) words[i>>2]|=utf8.charCodeAt(i)<<((3-i)%4*8);
+    words[utf8.length>>2]|=0x80<<((3-utf8.length)%4*8);
+    words[((utf8.length+8>>6)<<4)+15]=utf8.length*8;
+    const primes=[], hash=[], k=[];
+    let candidate=2;
+    while(k.length<64){
+        let isPrime=true;
+        for(let i=2;i*i<=candidate;i++) if(candidate%i===0){isPrime=false;break;}
+        if(isPrime){
+            primes.push(candidate);
+            const root=Math.sqrt(candidate), cube=Math.cbrt(candidate);
+            if(hash.length<8) hash.push((root%1)*0x100000000|0);
+            k.push((cube%1)*0x100000000|0);
+        }
+        candidate++;
+    }
+    for(let i=0;i<words.length;i+=16){
+        const w=Array(64).fill(0);
+        for(let j=0;j<16;j++) w[j]=words[i+j]||0;
+        let [a,b,c,d,e,f,g,h]=hash;
+        for(let j=0;j<64;j++){
+            if(j>=16){
+                const s0=rotateRight(7,w[j-15])^rotateRight(18,w[j-15])^(w[j-15]>>>3);
+                const s1=rotateRight(17,w[j-2])^rotateRight(19,w[j-2])^(w[j-2]>>>10);
+                w[j]=(w[j-16]+s0+w[j-7]+s1)|0;
+            }
+            const s1=rotateRight(6,e)^rotateRight(11,e)^rotateRight(25,e);
+            const ch=(e&f)^(~e&g);
+            const temp1=(h+s1+ch+k[j]+w[j])|0;
+            const s0=rotateRight(2,a)^rotateRight(13,a)^rotateRight(22,a);
+            const maj=(a&b)^(a&c)^(b&c);
+            const temp2=(s0+maj)|0;
+            h=g;g=f;f=e;e=(d+temp1)|0;d=c;c=b;b=a;a=(temp1+temp2)|0;
+        }
+        hash[0]=(hash[0]+a)|0;hash[1]=(hash[1]+b)|0;hash[2]=(hash[2]+c)|0;hash[3]=(hash[3]+d)|0;
+        hash[4]=(hash[4]+e)|0;hash[5]=(hash[5]+f)|0;hash[6]=(hash[6]+g)|0;hash[7]=(hash[7]+h)|0;
+    }
+    return hash.map(h=>(h>>>0).toString(16).padStart(8,'0')).join('');
+}
+function setAuthenticatedView(isAuthenticated){
+    const loginScreen = document.getElementById('loginScreen');
+    const mainPanel = document.getElementById('mainPanel');
+    if(loginScreen) loginScreen.style.display = isAuthenticated ? 'none' : 'flex';
+    if(mainPanel) mainPanel.classList.toggle('auth-locked', !isAuthenticated);
+}
+async function handleLogin(event){
+    event.preventDefault();
+    const id = document.getElementById('loginId')?.value.trim() || '';
+    const pass = document.getElementById('loginPass')?.value || '';
+    const error = document.getElementById('loginError');
+    const [idHash, passHash] = await Promise.all([hashCredential(id), hashCredential(pass)]);
+    if(idHash === LOGIN_ID_HASH && passHash === LOGIN_PASS_HASH){
+        if(error) error.textContent = "";
+        sessionStorage.setItem('systemPanelAuthenticated','true');
+        setAuthenticatedView(true);
+        showNotification("Access Granted","Welcome back, Creator.","success","system");
+        return;
+    }
+    if(error) error.textContent = "Invalid ID or pass. Try again.";
+}
+function logoutSystem(){
+    sessionStorage.removeItem('systemPanelAuthenticated');
+    setAuthenticatedView(false);
+    const pass = document.getElementById('loginPass');
+    const error = document.getElementById('loginError');
+    if(pass) pass.value = '';
+    if(error) error.textContent = '';
+    closeModal();
+}
+
+let realms = ["Awakening Realm","Origin Condensation Realm","Origin Sea Realm","Purple Mansion Realm","True Spirit Realm","Mystic Conception Realm","True Seed Creation Realm","Mortal Transcendence Realm","Longevity Realm","Law Perception Realm","Law Assimilation Realm","Origin Principle Realm","Origin Creation Realm","Dao Evolution Realm","Infinite Great Dao Realm","Transcendence"];
+
+let state = {
+    hostName: "VANSH", talent: "All-Encompassing", ep: 30000, ap: 50, level: 1, exp: 0,
+    realmIndex: 0, realmLevel: 1,
+    techniques: [{xp:70, name:"Five Elements Art"}],
+    spells: [{xp:44, name:"Fire Ball Art"},{xp:36, name:"Five Elements Escape"},{xp:7, name:"Little Cloud Rain Art"},{xp:0, name:"Metal Arrow Art"},{xp:0, name:"Wood Sword Art"}]
+};
+
+let stats = {
+    totalCultivations: 0,
+    totalEPEarned: 0,
+    totalEPSpent: 0,
+    spellsLearned: 0,
+    spellsDevoured: 0,
+    techniquesLearned: 0,
+    techniquesDevoured: 0,
+    fusionCount: 0,
+    breakthroughs: 0,
+    highestRealm: "Awakening Realm"
+};
+
+let voidEnergy=0, upgradeBonus=0;
+let unlockedBaseFeatures=[], heavenFeatures=[], heavenFeatureLevels={}, customFeatures=[], storageItems=[];
+let notificationHistory=[], lastOnlineTime=null;
+let autoCultivateInterval=null, absorptionInterval=null, currentNotification=null;
+
+let settings = {
+    autoCultivateIntervalSec:3, autoAbsorptionEnabled:true,
+    devourConfirmation:false, upgradeConfirmation:true,
+    notificationDurationMs:2000, collapseAllSections:false,
+    welcomeNotificationEnabled:true, offlineRewardsEnabled:true,
+    soundEnabled: true
+};
+
+let notificationFilters = {
+    cultivation:true, technique:true, spell:true, system:true,
+    devour:true, absorption:true, detection:true, fusion:true, storage:true
+};
+
+const rand=(a,b)=>Math.floor(Math.random()*(b-a+1))+a;
+const fmt=n=>n.toLocaleString();
+
+function playSound(type){
+    if(!settings.soundEnabled) return;
+    try {
+        const ac = new (window.AudioContext || window.webkitAudioContext)();
+        const o = ac.createOscillator();
+        const g = ac.createGain();
+        o.connect(g); g.connect(ac.destination);
+        if(type === 'breakthrough'){
+            o.type = 'sine';
+            o.frequency.setValueAtTime(523.25, ac.currentTime); 
+            o.frequency.linearRampToValueAtTime(1046.5, ac.currentTime + 0.15); 
+            g.gain.setValueAtTime(0.3, ac.currentTime);
+            g.gain.exponentialRampToValueAtTime(0.01, ac.currentTime + 0.2);
+            o.start(ac.currentTime); o.stop(ac.currentTime + 0.2);
+        }
+    } catch(e){}
+}
+
+function getRealmDisplay(idx,lvl){
+    if(idx<0||idx>=realms.length)idx=0;
+    if(idx===realms.length-1)return realms[idx]+" Level "+lvl;
+    return realms[idx]+" Level "+Math.min(lvl,9);
+}
+function getRealmProgress(idx,lvl){
+    if(idx===realms.length-1) return { current: lvl, max: Infinity, pct: 0 };
+    return { current: lvl, max: 9, pct: Math.min(lvl,9)/9*100 };
+}
+function getStageInfo(xp){
+    if(xp<=100)return{name:"Novice",current:xp,max:100};
+    if(xp<=200)return{name:"Proficient",current:xp-100,max:100};
+    if(xp<=500)return{name:"Perfection",current:xp-200,max:300};
+    if(xp<=1000)return{name:"Great Perfection",current:xp-500,max:500};
+    return{name:"Creation",current:xp-1000,max:Infinity};
+}
+function getRealmMultiplier(){let m=1+state.realmIndex*0.5;if(state.realmIndex===realms.length-1&&state.realmLevel>9)m+=(state.realmLevel-9)*0.2;return Math.floor(m*10)/10;}
+function getUpgradeMultiplier(){return 1+upgradeBonus/100;}
+function getHeavenFeatureMultiplier(effect){let m=1;heavenFeatures.forEach(f=>{if(f.effectType===effect)m*=(1+(heavenFeatureLevels[f.name]||1)*(f.basePower/100));});return m;}
+function getDevourMultiplier(){return getHeavenFeatureMultiplier("devour_gain");}
+function getSpellTrainingMultiplier(){return getHeavenFeatureMultiplier("spell_gain");}
+function getTechniqueMultiplier(){return getHeavenFeatureMultiplier("technique_gain");}
+function getCultivationCostReduction(){let r=0;heavenFeatures.forEach(f=>{if(f.effectType==="cultivation_cost")r+=(f.basePower/100)*(heavenFeatureLevels[f.name]||1);});return Math.min(0.8,r);}
+function getCultivationGainBonus(){return getHeavenFeatureMultiplier("cultivation_gain");}
+function getAPGainBonus(){return getHeavenFeatureMultiplier("ap_gain");}
+function getFusionCostReduction(){let r=0;heavenFeatures.forEach(f=>{if(f.effectType==="fusion_cost")r+=(f.basePower/100)*(heavenFeatureLevels[f.name]||1);});return Math.min(0.9,r);}
+function getAbsorptionRate(){let m=getRealmMultiplier(),h=getHeavenFeatureMultiplier("void_absorption"),u=getUpgradeMultiplier();return{min:Math.max(1,Math.floor(1*m*h*u)),max:Math.max(4,Math.floor(4*m*h*u))};}
+function getCultivationCost(){let reduction=getCultivationCostReduction();return Math.max(1,Math.floor((5+Math.floor(state.realmIndex*1.5))*(1-reduction)));}
+function getUpgradeCost(){return 1000*Math.pow(2,state.level-1);}
+function setVal(id,val){let el=document.getElementById(id);if(el)el.value=val;}
+
+function cultivate(){
+    let cost=getCultivationCost();
+    if(state.ep<cost){showNotification("Failed",`Need ${cost} EP`,"error","cultivation");return;}
+    state.ep-=cost; stats.totalEPSpent+=cost;
+    let gain=Math.floor(rand(5,15)*getCultivationGainBonus());
+    state.exp+=gain;
+    stats.totalCultivations++;
+    stats.totalEPEarned+=gain;
+    if(state.exp>=100){
+        state.exp=0;
+        let isLast=state.realmIndex===realms.length-1;
+        if(isLast){state.realmLevel++;stats.breakthroughs++;stats.highestRealm=getRealmDisplay(state.realmIndex,state.realmLevel);showNotification("Transcendence Growth!",getRealmDisplay(state.realmIndex,state.realmLevel),"success","cultivation");playSound('breakthrough');}
+        else if(state.realmLevel<9){state.realmLevel++;stats.breakthroughs++;stats.highestRealm=getRealmDisplay(state.realmIndex,state.realmLevel);showNotification("Breakthrough!",getRealmDisplay(state.realmIndex,state.realmLevel),"success","cultivation");playSound('breakthrough');}
+        else if(state.realmIndex+1<realms.length){state.realmIndex++;state.realmLevel=1;stats.breakthroughs++;stats.highestRealm=realms[state.realmIndex];showNotification("✦ MAJOR BREAKTHROUGH! ✦",`You have reached the ${realms[state.realmIndex]}`,"success","cultivation");playSound('breakthrough');}
+        else{state.realmLevel++;stats.breakthroughs++;stats.highestRealm=getRealmDisplay(state.realmIndex,state.realmLevel);showNotification("Transcendence Growth!",getRealmDisplay(state.realmIndex,state.realmLevel),"success","cultivation");playSound('breakthrough');}
+        flashEffect();
+    }
+    showNotification("Cultivation",`+${gain} EXP`,"success","cultivation");
+    updateUI();autoSave();
+}
+function grindTechnique(i){
+    let gain=rand(5,10);
+    let total=Math.floor(gain*getTechniqueMultiplier()*getUpgradeMultiplier());
+    state.techniques[i].xp+=total;state.ap+=total;
+    showNotification("Technique Training",`${state.techniques[i].name} +${total} XP, +${total} AP`,"info","technique");
+    updateUI();autoSave();
+}
+function grindSpell(i){
+    let gain=rand(5,10);
+    let total=Math.floor(gain*getSpellTrainingMultiplier()*getUpgradeMultiplier());
+    state.spells[i].xp+=total;state.ap+=total;
+    showNotification("Spell Training",`${state.spells[i].name} +${total} XP, +${total} AP`,"info","spell");
+    updateUI();autoSave();
+}
+function collectVoidEnergy(){
+    if(voidEnergy<=0){showNotification("No Void Energy","Nothing to collect","error","absorption");return;}
+    let gain=Math.floor(voidEnergy*10*getHeavenFeatureMultiplier("void_absorption")*getUpgradeMultiplier());
+    state.ep+=gain;stats.totalEPEarned+=gain;voidEnergy=0;
+    showNotification("Void Energy Collected",`+${gain} EP`,"success","absorption");
+    updateUI();autoSave();
+}
+
+const autoCultivateBtn=document.getElementById('autoCultivateBtn');
+function startAutoCultivation(){
+    if(autoCultivateInterval)clearInterval(autoCultivateInterval);
+    autoCultivateInterval=setInterval(()=>{if(state.exp<100)cultivate();else{stopAutoCultivation();autoCultivateBtn.textContent="Auto: OFF";autoCultivateBtn.classList.remove('active');showNotification("Auto Stopped","Max EXP reached","warning","cultivation");}},settings.autoCultivateIntervalSec*1000);
+    autoCultivateBtn.textContent="Auto: ON";autoCultivateBtn.classList.add('active');
+}
+function stopAutoCultivation(){if(autoCultivateInterval){clearInterval(autoCultivateInterval);autoCultivateInterval=null;}autoCultivateBtn.textContent="Auto: OFF";autoCultivateBtn.classList.remove('active');}
+autoCultivateBtn.addEventListener('click',()=>autoCultivateInterval?stopAutoCultivation():startAutoCultivation());
+
+function startAutoAbsorption(){
+    if(absorptionInterval)clearInterval(absorptionInterval);
+    if(!settings.autoAbsorptionEnabled)return;
+    absorptionInterval=setInterval(()=>{
+        let rate=getAbsorptionRate(),gain=rand(rate.min,rate.max);
+        voidEnergy+=gain;
+        updateUI();
+        if(Math.random()<0.15)showNotification("Void Absorption",`+${gain} void energy`,"info","absorption");
+        autoSave();
+    },5000);
+}
+
+let devourableItems=[{name:"Mortal Soul",value:10,desc:"Weak soul essence"},{name:"Spirit Stone",value:25,desc:"Concentrated spiritual energy"},{name:"Demon Core",value:50,desc:"Core of a lesser demon"},{name:"Heavenly Treasure",value:100,desc:"Rare celestial item"},{name:"Ancestor Bone",value:200,desc:"Remains of an ancient cultivator"},{name:"Dao Fragment",value:500,desc:"Piece of universal law"}];
+
+function openMasterDevourUI() {
+    let mult = getDevourMultiplier();
+    let html = `<h3 style="margin-bottom: 10px; color:var(--accent-primary); text-align:center;">MYSTICAL DEVOURING VOID</h3>
+    <p style="margin-bottom:15px; font-size:0.75rem; color:var(--text-muted); text-align:center;">Current Devour Multiplier: <strong style="color:var(--warning);">x${mult.toFixed(1)}</strong></p>
+    <div style="display:flex; flex-direction:column; gap:10px;">
+        <button class="modal-btn modal-btn-secondary" style="border-color:rgba(255,255,255,0.1);" onclick="openDevourUI()">Devour Items</button>
+        <button class="modal-btn modal-btn-secondary" style="border-color:rgba(255,255,255,0.1);" onclick="devourSpell()">Devour Spells</button>
+        <button class="modal-btn modal-btn-secondary" style="border-color:rgba(255,255,255,0.1);" onclick="devourTechnique()">Devour Techniques</button>
+    </div>
+    <div class="modal-actions" style="margin-top:20px;">
+        <button class="modal-btn modal-btn-secondary" onclick="closeModal()">CLOSE</button>
+    </div>`;
+    openModal(html);
+}
+
+function openDevourUI(){
+    let mult=getDevourMultiplier();
+    let html=`<h3 style="margin-bottom:10px;">DEVOUR ITEMS</h3><p style="margin-bottom:10px;">(x${mult.toFixed(1)} bonus)</p><div style="max-height:300px;overflow-y:auto;">`;
+    devourableItems.forEach((item,i)=>{let val=Math.floor(item.value*mult);html+=`<div style="cursor:pointer;padding:8px;border:1px solid var(--border-color);border-radius:8px;margin-bottom:6px;" onclick="devourItem(${i})"><div><strong>${item.name}</strong> <span style="color:var(--warning);">+${val} EP</span></div><div style="font-size:.65rem;color:var(--text-muted);">${item.desc}</div></div>`;});
+    html+=`</div><div class="modal-actions"><button class="modal-btn modal-btn-secondary" onclick="openMasterDevourUI()">BACK</button></div>`;
+    openModal(html);
+}
+function devourItem(i){let val=Math.floor(devourableItems[i].value*getDevourMultiplier());state.ep+=val;stats.totalEPEarned+=val;showNotification("Devoured",`${devourableItems[i].name} +${val} EP`,"warning","devour");updateUI();autoSave();closeModal();}
+
+function devourSpell(){
+    if(!state.spells.length){showNotification("No Spells","","error","devour");return;}
+    let mult=getDevourMultiplier();
+    let html=`<h3 style="margin-bottom:10px;">DEVOUR SPELL</h3><p style="margin-bottom:10px;">(x${mult.toFixed(1)} bonus)</p><div style="max-height:300px;overflow-y:auto;">`;
+    state.spells.forEach((s,i)=>{let val=Math.floor((s.xp/10+10)*mult);html+=`<div style="cursor:pointer;padding:8px;margin-bottom:6px;border:1px solid var(--border-color);border-radius:8px;" onclick="confirmDevourSpell(${i},${val})"><strong>${s.name}</strong> +${val} EP</div>`;});
+    html+=`</div><div class="modal-actions"><button class="modal-btn modal-btn-secondary" onclick="openMasterDevourUI()">BACK</button></div>`;
+    openModal(html);
+}
+function confirmDevourSpell(i,val){settings.devourConfirmation?showCustomConfirm("DEVOUR SPELL",`Devour "${state.spells[i].name}" for ${val} EP?`,()=>executeDevourSpell(i,val)):executeDevourSpell(i,val);}
+function executeDevourSpell(i,val){let n=state.spells[i].name;state.spells.splice(i,1);state.ep+=val;stats.totalEPEarned+=val;stats.spellsDevoured++;showNotification("Spell Devoured",`${n} +${val} EP`,"warning","devour");updateUI();autoSave();closeModal();}
+
+function devourTechnique(){
+    if(!state.techniques.length){showNotification("No Techniques","","error","devour");return;}
+    let mult=getDevourMultiplier();
+    let html=`<h3 style="margin-bottom:10px;">DEVOUR TECHNIQUE</h3><p style="margin-bottom:10px;">(x${mult.toFixed(1)} bonus)</p><div style="max-height:300px;overflow-y:auto;">`;
+    state.techniques.forEach((t,i)=>{let val=Math.floor((t.xp/10+10)*mult);html+=`<div style="cursor:pointer;padding:8px;margin-bottom:6px;border:1px solid var(--border-color);border-radius:8px;" onclick="confirmDevourTechnique(${i},${val})"><strong>${t.name}</strong> +${val} EP</div>`;});
+    html+=`</div><div class="modal-actions"><button class="modal-btn modal-btn-secondary" onclick="openMasterDevourUI()">BACK</button></div>`;
+    openModal(html);
+}
+function confirmDevourTechnique(i,val){settings.devourConfirmation?showCustomConfirm("DEVOUR TECHNIQUE",`Devour "${state.techniques[i].name}" for ${val} EP?`,()=>executeDevourTechnique(i,val)):executeDevourTechnique(i,val);}
+function executeDevourTechnique(i,val){let n=state.techniques[i].name;state.techniques.splice(i,1);state.ep+=val;stats.totalEPEarned+=val;stats.techniquesDevoured++;showNotification("Technique Devoured",`${n} +${val} EP`,"warning","devour");updateUI();autoSave();closeModal();}
+
+function openAddTechniqueUI(){
+    let html=`<h3 style="margin-bottom:10px;">ADD TECHNIQUE</h3><p style="margin-bottom:10px;">Cost: 20 AP (you have ${state.ap})</p><div class="modal-input"><input type="text" id="newTechName" placeholder="Technique name" style="width:100%;background:transparent;border:none;color:white;"></div>
+        <div class="preset-spells"><button class="preset-btn" onclick="setVal('newTechName','Heavenly Palm')">Heavenly Palm</button><button class="preset-btn" onclick="setVal('newTechName','Void Slash')">Void Slash</button></div>
+        <div class="modal-actions"><button class="modal-btn modal-btn-primary" onclick="addTechnique()">ADD</button><button class="modal-btn modal-btn-secondary" onclick="closeModal()">CANCEL</button></div>`;
+    openModal(html);
+}
+function addTechnique(){
+    let name=document.getElementById('newTechName')?.value.trim();
+    if(!name){showNotification("Failed","Enter a name","error","technique");return;}
+    if(state.ap<20){showNotification("Failed","Need 20 AP","error","technique");return;}
+    state.ap-=20;state.techniques.push({xp:0,name});stats.techniquesLearned++;
+    showNotification("Technique Added",name,"success","technique");
+    closeModal();updateUI();autoSave();
+}
+function openTechniqueManager(){
+    let html=`<h3 style="margin-bottom:10px;">MANAGE TECHNIQUES</h3><div style="max-height:200px;overflow-y:auto;">`;
+    state.techniques.forEach((t,i)=>{html+=`<div class="spell-checkbox-item" style="display:flex;justify-content:space-between;padding:6px;background:rgba(255,255,255,0.02);border-radius:6px;margin:4px 0;"><span>${t.name}</span><button class="modal-btn modal-btn-danger" style="flex:0;padding:4px 8px;font-size:.6rem;" onclick="deleteTechnique(${i})">DELETE</button></div>`;});
+    html+=`</div><div class="modal-actions"><button class="modal-btn modal-btn-secondary" onclick="closeModal()">CLOSE</button></div>`;
+    openModal(html);
+}
+function deleteTechnique(i){state.techniques.splice(i,1);showNotification("Technique Removed","","info","technique");updateUI();autoSave();closeModal();openTechniqueManager();}
+function openAddSpellUI(){
+    let html=`<h3 style="margin-bottom:10px;">ADD SPELL</h3><p style="margin-bottom:10px;">Cost: 20 AP (you have ${state.ap})</p><div class="modal-input"><input type="text" id="newSpellName" placeholder="Spell name" style="width:100%;background:transparent;border:none;color:white;"></div>
+        <div class="preset-spells"><button class="preset-btn" onclick="setVal('newSpellName','Dragon Flame')">Dragon Flame</button><button class="preset-btn" onclick="setVal('newSpellName','Thunder Strike')">Thunder Strike</button></div>
+        <div class="modal-actions"><button class="modal-btn modal-btn-primary" onclick="addSpell()">ADD</button><button class="modal-btn modal-btn-secondary" onclick="closeModal()">CANCEL</button></div>`;
+    openModal(html);
+}
+function addSpell(){
+    let name=document.getElementById('newSpellName')?.value.trim();
+    if(!name){showNotification("Failed","Enter a name","error","spell");return;}
+    if(state.ap<20){showNotification("Failed","Need 20 AP","error","spell");return;}
+    state.ap-=20;state.spells.push({xp:0,name});stats.spellsLearned++;
+    showNotification("Spell Added",name,"success","spell");
+    closeModal();updateUI();autoSave();
+}
+function openSpellManager(){
+    let html=`<h3 style="margin-bottom:10px;">MANAGE SPELLS</h3><div style="max-height:200px;overflow-y:auto;">`;
+    state.spells.forEach((s,i)=>{html+=`<div class="spell-checkbox-item" style="display:flex;justify-content:space-between;padding:6px;background:rgba(255,255,255,0.02);border-radius:6px;margin:4px 0;"><span>${s.name}</span><button class="modal-btn modal-btn-danger" style="flex:0;padding:4px 8px;font-size:.6rem;" onclick="deleteSpell(${i})">DELETE</button></div>`;});
+    html+=`</div><div class="modal-actions"><button class="modal-btn modal-btn-secondary" onclick="closeModal()">CLOSE</button></div>`;
+    openModal(html);
+}
+function deleteSpell(i){state.spells.splice(i,1);showNotification("Spell Removed","","info","spell");updateUI();autoSave();closeModal();openSpellManager();}
+
+function openUpgradeChoice(){
+    let cost=getUpgradeCost();
+    let html=`<h3 style="margin-bottom:10px;">SYSTEM UPGRADE</h3><p style="margin-bottom:10px;">Random: ${cost} EP | Custom: ${cost} EP | Create: ${cost+500} EP</p>
+        <div class="upgrade-option" onclick="showRandomUpgrade()"><strong>RANDOM UPGRADE</strong> (30% Heaven Defying)</div>
+        <div class="upgrade-option" onclick="showCustomUpgradeSelector()"><strong>CUSTOM UPGRADE</strong> (Choose feature)</div>
+        <div class="upgrade-option heaven" onclick="showFeatureCreation()"><strong>✦ FEATURE CUSTOMIZATION ✦</strong> (Create your own)</div>
+        <div class="modal-actions"><button class="modal-btn modal-btn-secondary" onclick="closeModal()">CANCEL</button></div>`;
+    openModal(html);
+}
+function showRandomUpgrade(){
+    let cost=getUpgradeCost();
+    if(state.ep<cost){showNotification("Insufficient EP","","error","system");return;}
+    settings.upgradeConfirmation?showCustomConfirm("RANDOM UPGRADE",`Spend ${cost} EP?`,()=>executeRandomUpgrade(cost)):executeRandomUpgrade(cost);
+}
+function executeRandomUpgrade(cost){
+    state.ep-=cost;stats.totalEPSpent+=cost;state.level++;upgradeBonus=(state.level-1)*10;
+    let base=["Storage Space","Detection","Deduction","Fusion","Law Insight"][state.level-2];
+    if(base&&!unlockedBaseFeatures.includes(base)){unlockedBaseFeatures.push(base);createBaseFeatureUI(base);}
+    let isHeaven=Math.random()<0.3;
+    let pool=isHeaven?heavenDefyingFeatures:normalFeatures;
+    let f=pool[Math.floor(Math.random()*pool.length)];
+    let ex=heavenFeatures.find(x=>x.name===f.name);
+    if(ex)heavenFeatureLevels[f.name]=(heavenFeatureLevels[f.name]||1)+1;
+    else{heavenFeatures.push(f);heavenFeatureLevels[f.name]=1;}
+    showNotification("Upgrade Complete",`System Level ${state.level}`,"success","system");
+    updateUI();autoSave();closeModal();setTimeout(()=>location.reload(),500);
+}
+function showCustomUpgradeSelector(){
+    let cost=getUpgradeCost();
+    let html=`<h3 style="margin-bottom:10px;">SELECT FEATURE</h3><p style="margin-bottom:10px;">Cost: ${cost} EP</p><div style="max-height: 250px; overflow-y:auto;">`;
+    [...normalFeatures,...heavenDefyingFeatures].forEach(f=>{
+        let lvl=heavenFeatureLevels[f.name]||0;
+        let safeName = f.name.replace(/'/g, "\\'"); 
+        html+=`<div class="upgrade-option ${f.heaven?'heaven':''}" onclick="showCustomUpgradeConfirm('${safeName}',${cost},${f.heaven})"><strong>${f.name}</strong>${f.heaven?'<span class="heaven-badge">HEAVEN</span>':''}<br><span style="font-size:.65rem;color:var(--text-muted);">${lvl>0?f.upgradeEffect:f.baseEffect}</span></div>`;
+    });
+    html+=`</div><div class="modal-actions"><button class="modal-btn modal-btn-secondary" onclick="closeModal()">BACK</button></div>`;
+    openModal(html);
+}
+function showCustomUpgradeConfirm(name,cost,isHeaven){
+    if(state.ep<cost){showNotification("Insufficient EP","","error","system");return;}
+    settings.upgradeConfirmation?showCustomConfirm("CUSTOM UPGRADE",`Upgrade "${name}" for ${cost} EP?`,()=>executeCustomUpgrade(name,cost,isHeaven)):executeCustomUpgrade(name,cost,isHeaven);
+}
+function executeCustomUpgrade(name,cost,isHeaven){
+    let src=isHeaven?heavenDefyingFeatures:normalFeatures;
+    let f=src.find(x=>x.name===name);if(!f)return;
+    state.ep-=cost;stats.totalEPSpent+=cost;state.level++;upgradeBonus=(state.level-1)*10;
+    let base=["Storage Space","Detection","Deduction","Fusion","Law Insight"][state.level-2];
+    if(base&&!unlockedBaseFeatures.includes(base)){unlockedBaseFeatures.push(base);createBaseFeatureUI(base);}
+    let ex=heavenFeatures.find(x=>x.name===name);
+    if(ex)heavenFeatureLevels[name]=(heavenFeatureLevels[name]||1)+1;
+    else{heavenFeatures.push(f);heavenFeatureLevels[name]=1;}
+    showNotification("Upgrade Complete",`System Level ${state.level}`,"success","system");
+    updateUI();autoSave();closeModal();setTimeout(()=>location.reload(),500);
+}
+function showFeatureCreation(){
+    let cost=getUpgradeCost()+500;
+    let html=`<h3 style="margin-bottom:10px;">✦ CUSTOM FEATURE ✦</h3><div class="modal-input"><input type="text" id="customFeatName" placeholder="Feature Name"></div>
+        <div class="modal-textarea"><textarea id="customFeatDesc" rows="3" placeholder="Describe its power..."></textarea></div>
+        <div class="modal-actions"><button class="modal-btn modal-btn-primary" onclick="confirmFeatureCreation(${cost})">CREATE</button><button class="modal-btn modal-btn-secondary" onclick="closeModal()">CANCEL</button></div>`;
+    openModal(html);
+}
+function confirmFeatureCreation(cost){
+    let name=document.getElementById('customFeatName')?.value.trim();
+    let desc=document.getElementById('customFeatDesc')?.value.trim();
+    if(!name||!desc){showNotification("Failed","Fill all fields","error","system");return;}
+    if(state.ep<cost){showNotification("Failed","Insufficient EP","error","system");return;}
+    settings.upgradeConfirmation?showCustomConfirm("CREATE FEATURE",`Create "${name}" for ${cost} EP?`,()=>executeFeatureCreation(name,desc,cost)):executeFeatureCreation(name,desc,cost);
+}
+function executeFeatureCreation(name,desc,cost){
+    state.ep-=cost;stats.totalEPSpent+=cost;state.level++;upgradeBonus=(state.level-1)*10;
+    let base=["Storage Space","Detection","Deduction","Fusion","Law Insight"][state.level-2];
+    if(base&&!unlockedBaseFeatures.includes(base)){unlockedBaseFeatures.push(base);createBaseFeatureUI(base);}
+    customFeatures.push({name,concept:desc});
+    showNotification("Custom Feature Created",name,"warning","system");
+    updateUI();autoSave();closeModal();setTimeout(()=>location.reload(),500);
+}
+
+// Base features
+let baseFeatureDefinitions={"Storage Space":{effect:"Infinite storage capacity."},"Detection":{effect:"Scan for treasures and threats."},"Deduction":{effect:"Analyze techniques for insight."},"Fusion":{effect:"The Creation Forge. Fuse anything into anything using the Yin-Yang Dao."},"Law Insight":{effect:"Comprehend Dao laws for massive XP."}};
+
+let heavenDefyingFeatures=[{name:"∞ Devouring Abyss",baseEffect:"Devouring gives 2x EP",upgradeEffect:"Devouring gives 3x EP",heaven:true,effectType:"devour_gain",basePower:100},{name:"Void's Blessing",baseEffect:"Void absorption +100%",upgradeEffect:"Void absorption +200%",heaven:true,effectType:"void_absorption",basePower:100},{name:"Immortal Spell Forge",baseEffect:"Spell training +50% XP",upgradeEffect:"Spell training +100% XP",heaven:true,effectType:"spell_gain",basePower:50},{name:"Dao Heart Enlightenment",baseEffect:"Technique training +50% XP",upgradeEffect:"Technique training +100% XP",heaven:true,effectType:"technique_gain",basePower:50},{name:"Primordial Chaos Fusion",baseEffect:"Fusion cost -50%",upgradeEffect:"Fusion cost -75%",heaven:true,effectType:"fusion_cost",basePower:50},{name:"Eternal Cultivation",baseEffect:"Cultivation cost -30%",upgradeEffect:"Cultivation cost -50%",heaven:true,effectType:"cultivation_cost",basePower:30}];
+let normalFeatures=[{name:"Efficient Absorption",baseEffect:"Void absorption +20%",upgradeEffect:"Void absorption +40%",heaven:false,effectType:"void_absorption",basePower:20},{name:"Spirit Enhancement",baseEffect:"Spell training +15% XP",upgradeEffect:"Spell training +30% XP",heaven:false,effectType:"spell_gain",basePower:15},{name:"Technique Mastery",baseEffect:"Technique training +15% XP",upgradeEffect:"Technique training +30% XP",heaven:false,effectType:"technique_gain",basePower:15},{name:"Fusion Efficiency",baseEffect:"Fusion cost -20%",upgradeEffect:"Fusion cost -40%",heaven:false,effectType:"fusion_cost",basePower:20},{name:"Cultivation Insight",baseEffect:"Cultivation cost -10%",upgradeEffect:"Cultivation cost -20%",heaven:false,effectType:"cultivation_cost",basePower:10},{name:"Devourer's Touch",baseEffect:"Devouring +20% EP",upgradeEffect:"Devouring +40% EP",heaven:false,effectType:"devour_gain",basePower:20}];
+
+function createBaseFeatureUI(name){
+    let container=document.getElementById('featuresContainer');
+    if(!container) return;
+    let btn="";
+    if(name==="Storage Space")btn=`<button class="action-btn" onclick="openStorage()">Open Storage</button>`;
+    if(name==="Detection")btn=`<button class="action-btn" onclick="useDetection()">Scan</button>`;
+    if(name==="Deduction")btn=`<button class="action-btn" onclick="useDeduction()">Analyze</button>`;
+    if(name==="Fusion")btn=`<button class="action-btn" style="border-color:var(--accent-primary); color:var(--accent-primary);" onclick="openCreationForgeUI()">Enter Forge</button>`;
+    if(name==="Law Insight")btn=`<button class="action-btn" onclick="useLawInsight()">Contemplate</button>`;
+    let div=document.createElement('div');div.className='feature-card';
+    div.innerHTML=`<div class="feature-header"><span class="feature-title">${name}</span></div><div class="feature-desc">${baseFeatureDefinitions[name]?.effect||''}</div><div>${btn}</div>`;
+    container.appendChild(div);
+}
+function openStorage(){
+    let html=`<h3 style="margin-bottom:10px;">STORAGE (INFINITE)</h3><div style="max-height: 250px; overflow-y: auto;">`;
+    if(!storageItems.length)html+="<p>Empty.</p>";
+    storageItems.forEach((item,i)=>{html+=`<div style="display:flex;justify-content:space-between;padding:6px;"><span>${item.name} x${item.quantity}</span><button class="action-btn" onclick="useStorageItem(${i})">Use</button></div>`;});
+    html+=`</div><div class="modal-actions"><button class="modal-btn modal-btn-secondary" onclick="closeModal()">CLOSE</button></div>`;
+    openModal(html);
+}
+function useStorageItem(i){
+    let item=storageItems[i],mult=getUpgradeMultiplier();
+    if(item.name==="Spirit Pill"){let gain=Math.floor(50*mult);state.ep+=gain;stats.totalEPEarned+=gain;showNotification("Used Spirit Pill",`+${gain} EP`,"success","storage");item.quantity--;if(item.quantity<=0)storageItems.splice(i,1);updateUI();autoSave();openStorage();}
+    else if(item.name==="Technique Scroll"){let gain=Math.floor(30*mult);if(state.techniques.length){let r=Math.floor(Math.random()*state.techniques.length);state.techniques[r].xp+=gain;showNotification("Used Scroll",`+${gain} XP to ${state.techniques[r].name}`,"success","storage");}item.quantity--;if(item.quantity<=0)storageItems.splice(i,1);updateUI();autoSave();openStorage();}
+}
+
+function useDetection() {
+    if(state.ep < 10) { showNotification("Detection Failed", "Need 10 EP", "error", "detection"); return; }
+    state.ep -= 10; 
+    stats.totalEPSpent += 10;
+    updateUI();
+
+    let html = `<h3 style="margin-bottom: 15px;">ENVIRONMENTAL SCAN</h3>
+        <div class="radar-container">
+            <div class="radar-grid"></div>
+            <div class="radar-crosshair"></div>
+            <div class="radar-crosshair vertical"></div>
+            <div class="radar-sweep"></div>
+            <div id="radarBlipsContainer"></div>
+        </div>
+        <div id="scanStatus" style="text-align:center; margin-bottom:15px; color:var(--text-muted); font-size:0.8rem; letter-spacing:1px;">SCANNING SURROUNDINGS...</div>
+        <div id="scanResults" class="scan-log" style="display:none;"></div>
+        <div class="modal-actions">
+            <button class="modal-btn modal-btn-secondary" id="closeScanBtn" onclick="closeModal()" disabled>ANALYZING...</button>
+        </div>
+    `;
+    openModal(html);
+
+    setTimeout(() => {
+        let blipsContainer = document.getElementById('radarBlipsContainer');
+        let resultsContainer = document.getElementById('scanResults');
+        let statusText = document.getElementById('scanStatus');
+        let closeBtn = document.getElementById('closeScanBtn');
+
+        if(!blipsContainer) return; 
+
+        statusText.textContent = "SCAN COMPLETE. TARGETS FOUND.";
+        statusText.style.color = "var(--success)";
+        resultsContainer.style.display = "block";
+        closeBtn.textContent = "CLOSE";
+        closeBtn.disabled = false;
+
+        let mult = getUpgradeMultiplier();
+        let numEntities = rand(2, 5);
+        let resultsHtml = "";
+        
+        let possibleEntities = [
+            { type: 'human', name: 'Mortal', color: '#a0a0b0', msg: 'Weak aura detected.' },
+            { type: 'enemy', name: 'Hostile Presence', color: '#ef4444', msg: 'Killing intent sensed nearby.' },
+            { type: 'treasure', name: 'Energy Source', color: '#f59e0b', msg: 'Buried spirit fluctuations.' },
+            { type: 'plant', name: 'Spirit Herb', color: '#00dc82', msg: 'High vitality concentration.' },
+            { type: 'phenomenon', name: 'Void Anomaly', color: '#7c5cff', msg: 'Unstable spatial rift.' }
+        ];
+
+        let rewardGiven = false;
+        let finalRewardText = "Nothing useful acquired.";
+
+        for(let i=0; i<numEntities; i++) {
+            let ent = possibleEntities[rand(0, possibleEntities.length-1)];
+            let top = rand(15, 85); 
+            let left = rand(15, 85);
+            
+            let blip = document.createElement('div');
+            blip.className = 'radar-blip';
+            blip.style.top = top + '%';
+            blip.style.left = left + '%';
+            blip.style.backgroundColor = ent.color;
+            blip.style.color = ent.color; 
+            blip.style.animationDelay = (rand(0, 15)/10) + 's';
+            blipsContainer.appendChild(blip);
+
+            resultsHtml += `<div style="margin-bottom:6px;"><span style="color:${ent.color}; font-size:1.2rem; line-height:0.5;">•</span> <strong>${ent.name}</strong>: <span style="color:var(--text-muted);">${ent.msg}</span></div>`;
+            
+            if(!rewardGiven) {
+                if(ent.type === 'treasure') {
+                    addToInventory("Spirit Pill", 1);
+                    finalRewardText = "Acquired: Spirit Pill x1";
+                    rewardGiven = true;
+                } else if(ent.type === 'plant' || ent.type === 'phenomenon') {
+                    let expGain = Math.floor(20 * mult);
+                    state.exp += expGain;
+                    finalRewardText = `Acquired: +${expGain} EXP`;
+                    rewardGiven = true;
+                } else if (ent.type === 'human') {
+                    addToInventory("Technique Scroll", 1);
+                    finalRewardText = "Acquired: Technique Scroll x1 (Stolen from Mortal)";
+                    rewardGiven = true;
+                }
+            }
+        }
+
+        resultsHtml += `<hr style="border-color:var(--border-color); margin:8px 0;">
+                        <div style="color:var(--accent-primary); font-weight:bold; font-size:0.8rem;">${finalRewardText}</div>`;
+        
+        resultsContainer.innerHTML = resultsHtml;
+        
+        if(state.exp >= 100) cultivate(); 
+        autoSave();
+        updateUI();
+
+    }, 2000);
+}
+
+function useDeduction() {
+    if(state.ep < 50) { showNotification("Deduction Failed", "Need 50 EP", "error", "system"); return; }
+    state.ep -= 50; 
+    stats.totalEPSpent += 50;
+    updateUI();
+
+    let html = `<h3 style="margin-bottom: 15px;">HEAVENLY DEDUCTION</h3>
+        <div class="bagua-wrapper">
+            <div class="bagua-ring"></div>
+            <div class="taiji-css" style="margin:0; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:50px; height:50px;"></div>
+        </div>
+        <div class="coin-container" id="deductionCoins">
+            <div class="iching-coin" style="animation-delay: 0s;"></div>
+            <div class="iching-coin" style="animation-delay: 0.13s;"></div>
+            <div class="iching-coin" style="animation-delay: 0.26s;"></div>
+        </div>
+        <div id="deductionStatus" style="text-align:center; margin-bottom:15px; color:var(--text-muted); font-size:0.8rem;">Consulting the Heavens...</div>
+        <div id="deductionResults" class="scan-log" style="display:none; text-align:center;"></div>
+        <div class="modal-actions">
+            <button class="modal-btn modal-btn-secondary" id="closeDeductBtn" onclick="closeModal()" disabled>DEDUCING...</button>
+        </div>`;
+    openModal(html);
+
+    setTimeout(() => {
+        let statusText = document.getElementById('deductionStatus');
+        let resultsDiv = document.getElementById('deductionResults');
+        let closeBtn = document.getElementById('closeDeductBtn');
+        let coins = document.getElementById('deductionCoins');
+        if(!statusText) return; 
+
+        if(coins) coins.innerHTML = `
+            <div class="iching-coin" style="animation:none; transform:rotateY(0deg);"></div>
+            <div class="iching-coin" style="animation:none; transform:rotateY(180deg);"></div>
+            <div class="iching-coin" style="animation:none; transform:rotateY(0deg);"></div>`;
+
+        let mult = getUpgradeMultiplier();
+        let roll = Math.random();
+        
+        let title = "";
+        let desc = "";
+        let color = "var(--success)";
+
+        if (roll < 0.35 && state.techniques.length > 0) {
+            let gain = Math.floor(rand(15, 40) * getTechniqueMultiplier() * mult);
+            let r = Math.floor(Math.random() * state.techniques.length);
+            state.techniques[r].xp += gain;
+            let target = state.techniques[r].name;
+            
+            title = "Martial Insight Gained!";
+            desc = `Target: <strong>${target}</strong><br><span style="color:var(--accent-primary);">+${gain} Technique XP</span>`;
+            color = "var(--accent-primary)";
+            showNotification("Deduction", `+${gain} XP to ${target}`, "success", "system");
+
+        } else if (roll < 0.60 && state.spells.length > 0) {
+            let gain = Math.floor(rand(15, 40) * getSpellTrainingMultiplier() * mult);
+            let r = Math.floor(Math.random() * state.spells.length);
+            state.spells[r].xp += gain;
+            let target = state.spells[r].name;
+
+            title = "Spell Epiphany!";
+            desc = `Target: <strong>${target}</strong><br><span style="color:var(--accent-secondary);">+${gain} Spell XP</span>`;
+            color = "var(--accent-secondary)";
+            showNotification("Deduction", `+${gain} XP to ${target}`, "success", "system");
+
+        } else if (roll < 0.85) {
+            let epGain = Math.floor(rand(150, 400) * mult);
+            state.ep += epGain;
+            stats.totalEPEarned += epGain;
+            
+            title = "Karmic Fortune!";
+            desc = `Discovered a hidden thread of destiny.<br><span style="color:var(--warning);">+${epGain} EP</span>`;
+            color = "var(--warning)";
+            showNotification("Deduction", `Fortune: +${epGain} EP`, "warning", "system");
+
+        } else {
+            if (Math.random() < 0.5) {
+                addToInventory("Dao Fragment", 1);
+                title = "Heavenly Secret Unveiled!";
+                desc = `Glimpsed the underlying laws of the world.<br><span style="color:#f0f;">Acquired: Dao Fragment x1</span>`;
+                color = "#f0f";
+                showNotification("Deduction", "Acquired Dao Fragment", "info", "system");
+            } else {
+                let apGain = rand(5, 15);
+                state.ap += apGain;
+                title = "Destiny Altered!";
+                desc = `Averted a future tribulation.<br><span style="color:var(--success);">+${apGain} Achievement Points (AP)</span>`;
+                color = "var(--success)";
+                showNotification("Deduction", `Altered Destiny: +${apGain} AP`, "success", "system");
+            }
+        }
+
+        statusText.textContent = "Hexagram Formed.";
+        statusText.style.color = color;
+        resultsDiv.style.display = "block";
+        resultsDiv.innerHTML = `<div style="font-size:1.1rem; color:${color}; font-weight:bold; margin-bottom:4px;">${title}</div>
+                                <div>${desc}</div>`;
+        
+        closeBtn.textContent = "CLOSE";
+        closeBtn.disabled = false;
+        
+        autoSave(); 
+        updateUI();
+    }, 2500);
+}
+
+// ✦ HEAVENLY CREATION FORGE ✦
+function openCreationForgeUI() {
+    let reduction=getFusionCostReduction(),cost=Math.max(1,Math.floor(100*(1-reduction))); 
+    
+    let html=`<h3 style="margin-bottom:10px; color:var(--accent-primary); text-align:center; letter-spacing:1px;">HEAVENLY CREATION FORGE</h3>
+    <div class="cauldron-display">
+        <div class="forge-particles"></div>
+        <div class="yin-yang-forge" id="forgeCauldron"></div>
+    </div>
+    
+    <div id="forgeControls">
+        <div style="font-size:0.7rem; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase;">Select Materials to Devour</div>
+        <div class="material-pool">`;
+        
+        state.spells.forEach((s,i) => {
+            html += `<div class="mat-pill spell" data-type="spell" data-idx="${i}" onclick="this.classList.toggle('selected')">Spell: ${s.name}</div>`;
+        });
+        state.techniques.forEach((t,i) => {
+            html += `<div class="mat-pill tech" data-type="tech" data-idx="${i}" onclick="this.classList.toggle('selected')">Tech: ${t.name}</div>`;
+        });
+        storageItems.forEach((item,i) => {
+            html += `<div class="mat-pill item" data-type="item" data-idx="${i}" onclick="this.classList.toggle('selected')">Item: ${item.name} (${item.quantity})</div>`;
+        });
+        
+        if(state.spells.length===0 && state.techniques.length===0 && storageItems.length===0) {
+            html += `<div style="color:var(--text-muted); font-size:0.75rem; width:100%; text-align:center;">No materials available to forge.</div>`;
+        }
+
+    html += `</div>
+        
+        <div style="margin-top:15px; display:flex; gap:10px;">
+            <input type="text" id="forgeName" placeholder="Creation Name..." class="modal-input" style="margin-bottom:0; flex:1;">
+            <select id="forgeType" class="modal-input" style="margin-bottom:0; flex:1; background:var(--bg-tertiary); cursor:pointer;">
+                <option value="spell">Formulate Spell</option>
+                <option value="technique">Derive Technique</option>
+                <option value="talent">Condense Talent</option>
+                <option value="item">Forge Mystic Item</option>
+                <option value="ability">Divine Ability</option>
+            </select>
+        </div>
+        
+        <div class="modal-actions">
+            <button class="modal-btn modal-btn-primary" onclick="igniteForge(${cost})">IGNITE FORGE (${cost} EP)</button>
+            <button class="modal-btn modal-btn-secondary" onclick="closeModal()">CANCEL</button>
+        </div>
+    </div>
+    <div id="forgeResult" style="display:none; text-align:center; padding: 20px;"></div>`;
+    
+    openModal(html);
+}
+
+function igniteForge(cost){
+    let selectedPills = document.querySelectorAll('.mat-pill.selected');
+    if(selectedPills.length < 2) { showNotification("Forge Failed", "Select at least 2 materials.", "error", "fusion"); return; }
+    
+    let totalCost = cost * selectedPills.length;
+    if(state.ep < totalCost) { showNotification("Forge Failed", "Need " + totalCost + " EP.", "error", "fusion"); return; }
+    
+    let newName = document.getElementById('forgeName').value.trim() || "Nameless Creation";
+    let fType = document.getElementById('forgeType').value;
+    
+    state.ep -= totalCost;
+    stats.totalEPSpent += totalCost;
+    stats.fusionCount++;
+    
+    document.getElementById('forgeControls').style.display = 'none';
+    document.getElementById('forgeCauldron').parentNode.classList.add('forge-active');
+    
+    let resultDiv = document.getElementById('forgeResult');
+    resultDiv.style.display = 'block';
+    resultDiv.innerHTML = `<div style="color:var(--text-muted); font-style:italic; font-size:0.85rem; margin-top:20px; animation: pulse 1.5s infinite;">The Yin-Yang circulates...<br>Devouring worldly laws...</div>`;
+    
+    setTimeout(() => {
+        let sSpells=[], sTechs=[], sItems=[];
+        selectedPills.forEach(pill => {
+            let type = pill.dataset.type, idx = parseInt(pill.dataset.idx);
+            if(type==='spell') sSpells.push(idx);
+            if(type==='tech') sTechs.push(idx);
+            if(type==='item') sItems.push(idx);
+        });
+        sSpells.sort((a,b)=>b-a).forEach(i => state.spells.splice(i,1));
+        sTechs.sort((a,b)=>b-a).forEach(i => state.techniques.splice(i,1));
+        sItems.sort((a,b)=>b-a).forEach(i => {
+            storageItems[i].quantity--;
+            if(storageItems[i].quantity <= 0) storageItems.splice(i,1);
+        });
+        
+        let color = "var(--success)";
+        let typeLabel = "";
+        if(fType === 'spell') { state.spells.push({xp:0, name:newName}); typeLabel = "Spell"; color = "var(--accent-secondary)"; }
+        if(fType === 'technique') { state.techniques.push({xp:0, name:newName}); typeLabel = "Technique"; color = "var(--success)"; }
+        if(fType === 'talent') { state.talent = newName; typeLabel = "Host Talent"; color = "var(--warning)"; }
+        if(fType === 'item') { addToInventory(newName, 1); typeLabel = "Mystic Item"; color = "#f0f"; }
+        if(fType === 'ability') { state.techniques.push({xp:0, name:"✦ " + newName}); typeLabel = "Divine Ability"; color = "var(--accent-primary)"; }
+        
+        let cauldronWrapper = document.getElementById('forgeCauldron');
+        if(cauldronWrapper) cauldronWrapper.parentNode.classList.remove('forge-active');
+        
+        resultDiv.innerHTML = `
+            <div style="font-size:1.4rem; color:${color}; font-weight:900; margin-bottom:10px; text-shadow: 0 0 10px ${color};">CREATION SUCCESS!</div>
+            <div style="font-size:0.9rem; color:var(--text-primary); margin-bottom:5px;">[${typeLabel}] <strong>${newName}</strong></div>
+            <div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:20px;">The laws of the world have been rewritten by your hands.</div>
+            <button class="modal-btn modal-btn-secondary" onclick="closeModal()">EMBRACE DESTINY</button>
+        `;
+        
+        updateUI();
+        autoSave();
+        showNotification("Forge Success", `Created ${newName}`, "success", "fusion");
+    }, 3000);
+}
+
+function useLawInsight() {
+    if(state.ep < 100) { showNotification("Law Insight Failed", "Need 100 EP", "error", "system"); return; }
+    state.ep -= 100; 
+    stats.totalEPSpent += 100;
+    updateUI();
+
+    let html = `<h3 style="margin-bottom: 15px;">LAW COMPREHENSION</h3>
+        <div class="heaven-earth-container">
+            <div class="dao-line horizontal" style="animation-delay: 0s;"></div>
+            <div class="dao-line horizontal" style="height:1px; opacity:0.3; animation-delay: 1s; animation-duration: 5s;"></div>
+            <div class="dao-line vertical" style="animation-delay: 0.5s;"></div>
+            <div class="dao-line vertical" style="width:1px; opacity:0.3; left: 30%; animation-delay: 1.5s; animation-duration: 6s;"></div>
+            <div class="insight-core"></div>
+        </div>
+        <div id="lawStatus" style="text-align:center; margin-bottom:15px; color:var(--text-muted); font-size:0.8rem; letter-spacing:1px;">Connecting to the Great Dao...</div>
+        <div id="lawResults" class="scan-log" style="display:none; text-align:center;"></div>
+        <div class="modal-actions">
+            <button class="modal-btn modal-btn-secondary" id="closeLawBtn" onclick="closeModal()" disabled>COMPREHENDING...</button>
+        </div>`;
+    openModal(html);
+
+    setTimeout(() => {
+        let statusText = document.getElementById('lawStatus');
+        let resultsDiv = document.getElementById('lawResults');
+        let closeBtn = document.getElementById('closeLawBtn');
+        if(!statusText) return;
+
+        let gain = Math.floor(rand(50, 100) * getTechniqueMultiplier() * getUpgradeMultiplier());
+        let target = "None";
+        
+        if(state.techniques.length) {
+            let r = Math.floor(Math.random() * state.techniques.length);
+            state.techniques[r].xp += gain;
+            target = state.techniques[r].name;
+        }
+
+        statusText.textContent = "Dao Laws Assimilated.";
+        statusText.style.color = "var(--warning)";
+        resultsDiv.style.display = "block";
+        resultsDiv.innerHTML = `<div style="font-size:1.1rem; color:var(--warning); font-weight:bold;">Epiphany Reached!</div>
+                                <div style="margin-top:6px;">Target: <strong>${target}</strong></div>
+                                <div style="color:var(--warning);">+${gain} Technique XP</div>`;
+        
+        closeBtn.textContent = "CLOSE";
+        closeBtn.disabled = false;
+        
+        showNotification("Law Insight", `+${gain} XP to ${target}`, "success", "system");
+        autoSave(); 
+        updateUI();
+    }, 3000);
+}
+
+function addToInventory(name,qty){let ex=storageItems.find(i=>i.name===name);if(ex)ex.quantity+=qty;else storageItems.push({name,quantity:qty});autoSave();}
+
+function dismissNotification(notif, direction='right'){
+    if(!notif?.parentNode)return;
+    if(notif.cleanupSwipe)notif.cleanupSwipe();
+    const distance = direction === 'up' ? -80 : (direction === 'left' ? -140 : 140);
+    notif.classList.remove('swiping');
+    notif.style.transition='0.3s ease';
+    notif.style.opacity='0';
+    notif.style.transform=direction === 'up' ? `translateY(${distance}px)` : `translateX(${distance}px)`;
+    setTimeout(()=>{if(notif.parentNode)notif.remove();if(currentNotification===notif)currentNotification=null;},300);
+}
+function enableNotificationSwipe(notif){
+    let startX=0,startY=0,dragX=0,dragY=0,dragging=false;
+    const start=e=>{
+        const point=e.touches?.[0]||e;
+        startX=point.clientX;startY=point.clientY;dragX=0;dragY=0;dragging=true;
+        notif.classList.add('swiping');
+    };
+    const move=e=>{
+        if(!dragging)return;
+        const point=e.touches?.[0]||e;
+        dragX=point.clientX-startX;dragY=point.clientY-startY;
+        if(Math.abs(dragX)>8||dragY<-8){
+            if(e.cancelable)e.preventDefault();
+            notif.style.transform=`translate(${dragX}px, ${Math.min(0,dragY)}px)`;
+            notif.style.opacity=String(Math.max(0.35,1-(Math.abs(dragX)+Math.max(0,-dragY))/220));
+        }
+    };
+    const end=()=>{
+        if(!dragging)return;
+        dragging=false;
+        notif.classList.remove('swiping');
+        if(Math.abs(dragX)>70||dragY<-55){
+            dismissNotification(notif,dragY<-55?'up':(dragX<0?'left':'right'));
+            return;
+        }
+        notif.style.transition='0.2s ease';
+        notif.style.opacity='1';
+        notif.style.transform='translate(0, 0)';
+    };
+    notif.addEventListener('touchstart',start,{passive:true});
+    notif.addEventListener('touchmove',move,{passive:false});
+    notif.addEventListener('touchend',end);
+    notif.addEventListener('mousedown',start);
+    window.addEventListener('mousemove',move);
+    window.addEventListener('mouseup',end);
+    notif.cleanupSwipe=()=>{
+        window.removeEventListener('mousemove',move);
+        window.removeEventListener('mouseup',end);
+    };
+}
+function showNotification(title,message,type='info',category='system'){
+    if(!notificationFilters[category])return;
+    notificationHistory.unshift({title,message,type,category,time:new Date().toLocaleTimeString(),date:new Date().toLocaleDateString()});
+    if(notificationHistory.length>50)notificationHistory.pop();
+    if(currentNotification&&currentNotification.parentNode)currentNotification.remove();
+    const container=document.getElementById('notifContainer');
+    const notif=document.createElement('div');
+    notif.className=`notification-card ${type}`;
+    notif.innerHTML=`<div class="notif-title">[${title.toUpperCase()}]</div><div class="notif-message">${message}</div><div class="notif-time">${new Date().toLocaleTimeString()}</div>`;
+    container.appendChild(notif);
+    currentNotification=notif;
+    enableNotificationSwipe(notif);
+    setTimeout(()=>{if(notif.parentNode&&currentNotification===notif)dismissNotification(notif,'right');},settings.notificationDurationMs);
+}
+
+function openLogAndStats(currentTab = 'logs') {
+    let html = `<h3 style="margin-bottom: 20px;">SYSTEM DATA</h3>`; 
+    
+    html += `
+    <div class="tab-container">
+        <button class="tab-btn ${currentTab === 'logs' ? 'active' : ''}" onclick="openLogAndStats('logs')">NOTIFICATION LOG</button>
+        <button class="tab-btn ${currentTab === 'stats' ? 'active' : ''}" onclick="openLogAndStats('stats')">STATISTICS</button>
+    </div>`;
+
+    if (currentTab === 'stats') {
+        html += `<div class="stats-grid">
+            <div class="stat-item"><div class="num">${fmt(stats.totalCultivations)}</div><div class="lbl">Cultivations</div></div>
+            <div class="stat-item"><div class="num">${fmt(stats.totalEPEarned)}</div><div class="lbl">EP Earned</div></div>
+            <div class="stat-item"><div class="num">${fmt(stats.totalEPSpent)}</div><div class="lbl">EP Spent</div></div>
+            <div class="stat-item"><div class="num">${fmt(stats.breakthroughs)}</div><div class="lbl">Breakthroughs</div></div>
+            <div class="stat-item"><div class="num">${fmt(stats.techniquesLearned)}</div><div class="lbl">Tech Learned</div></div>
+            <div class="stat-item"><div class="num">${fmt(stats.techniquesDevoured)}</div><div class="lbl">Tech Devoured</div></div>
+            <div class="stat-item"><div class="num">${fmt(stats.spellsLearned)}</div><div class="lbl">Spells Learned</div></div>
+            <div class="stat-item"><div class="num">${fmt(stats.spellsDevoured)}</div><div class="lbl">Spells Devoured</div></div>
+            <div class="stat-item"><div class="num">${fmt(stats.fusionCount)}</div><div class="lbl">Fusions</div></div>
+            <div class="stat-item"><div class="num">${stats.highestRealm}</div><div class="lbl">Highest Realm</div></div>
+        </div>`;
+    } else {
+        if(!notificationHistory.length) {
+            html += "<p style='font-size:0.8rem; color:var(--text-muted);'>Empty.</p>";
+        } else {
+            html += `<div style="max-height:220px; overflow-y:auto; border:1px solid var(--border-color); border-radius:var(--radius-md); background:rgba(255,255,255,0.02); margin-bottom:10px;">`;
+            notificationHistory.forEach(n => {
+                html += `<div class="log-item"><div class="log-dot ${n.type}"></div><div><strong>${n.title}</strong><br>${n.message}<br><span style="font-size:.65rem;color:var(--text-muted);">${n.date} ${n.time}</span></div></div>`;
+            });
+            html += `</div>`;
+            
+            html += `<button class="modal-btn modal-btn-danger" style="margin-bottom: 10px; width: 100%; padding: 8px; font-size: 0.7rem;" onclick="notificationHistory=[];autoSave();openLogAndStats('logs');">CLEAR LOG</button>`;
+        }
+    }
+    
+    html += `<div class="modal-actions">
+        <button class="modal-btn modal-btn-secondary" onclick="closeModal()">CLOSE</button>
+    </div>`;
+    
+    openModal(html);
+}
+
+function setCultInterval(sec) {
+    settings.autoCultivateIntervalSec = sec;
+    autoSave();
+    if(autoCultivateInterval){stopAutoCultivation();startAutoCultivation();}
+    openSettings(); 
+}
+
+function openSettings(){
+    let html=`<h3 style="margin-bottom:15px;">SETTINGS</h3>`;
+    html+=`<div class="feature-card"><div class="settings-collapsible-header" onclick="toggleSettingsSection(this)"><span>NOTIFICATIONS</span><span style="font-size:.6rem;">▼</span></div><div class="settings-collapsible-content"><h4 style="font-size:.7rem;color:var(--text-muted);margin-bottom:6px;">Filter Categories</h4>`;
+    let filters=[{id:"cultivation",name:"Cultivation & Breakthroughs"},{id:"technique",name:"Technique Training"},{id:"spell",name:"Spell Training"},{id:"system",name:"System Upgrades"},{id:"devour",name:"Devouring"},{id:"absorption",name:"Void Absorption"},{id:"detection",name:"Detection"},{id:"fusion",name:"Spell Fusion"},{id:"storage",name:"Storage"}];
+    filters.forEach(f=>{html+=`<div class="filter-item"><span>${f.name}</span><label class="pill-toggle"><input type="checkbox" ${notificationFilters[f.id]?'checked':''} onchange="notificationFilters['${f.id}']=this.checked;autoSave();"><span class="pill-slider"></span></label></div>`;});
+    html+=`<hr style="border-color:var(--border-color);margin:8px 0;"><div class="settings-row"><span>Duration (s)</span><input type="number" id="setNotifDuration" min="1" max="10" step="0.5" value="${settings.notificationDurationMs/1000}" style="width:60px;background:var(--bg-tertiary);border:1px solid var(--border-color);color:white;border-radius:4px;padding:4px 6px;"></div>
+        <div class="settings-row"><span>Welcome Message</span><label class="pill-toggle"><input type="checkbox" ${settings.welcomeNotificationEnabled?'checked':''} onchange="settings.welcomeNotificationEnabled=this.checked;autoSave();"><span class="pill-slider"></span></label></div></div></div>`;
+    html+=`<div class="feature-card"><div class="settings-collapsible-header" onclick="toggleSettingsSection(this)"><span>FUNCTIONS</span><span style="font-size:.6rem;">▼</span></div><div class="settings-collapsible-content">
+        
+        <div class="settings-row" style="flex-wrap: wrap; gap: 8px;">
+            <span style="width:100%; margin-bottom: 4px;">Auto-Cult Interval</span>
+            <div style="display:flex; width:100%; gap:8px;">
+                <button class="modal-btn ${settings.autoCultivateIntervalSec===2?'modal-btn-primary':'modal-btn-secondary'}" style="padding:6px;" onclick="setCultInterval(2)">2s</button>
+                <button class="modal-btn ${settings.autoCultivateIntervalSec===3?'modal-btn-primary':'modal-btn-secondary'}" style="padding:6px;" onclick="setCultInterval(3)">3s</button>
+                <button class="modal-btn ${settings.autoCultivateIntervalSec===5?'modal-btn-primary':'modal-btn-secondary'}" style="padding:6px;" onclick="setCultInterval(5)">5s</button>
+                <button class="modal-btn ${settings.autoCultivateIntervalSec===10?'modal-btn-primary':'modal-btn-secondary'}" style="padding:6px;" onclick="setCultInterval(10)">10s</button>
+            </div>
+        </div>
+
+        <div class="settings-row"><span>Auto-Absorption</span><label class="pill-toggle"><input type="checkbox" ${settings.autoAbsorptionEnabled?'checked':''} onchange="settings.autoAbsorptionEnabled=this.checked;startAutoAbsorption();autoSave();"><span class="pill-slider"></span></label></div>
+        <div class="settings-row"><span>Devour Confirmation</span><label class="pill-toggle"><input type="checkbox" ${settings.devourConfirmation?'checked':''} onchange="settings.devourConfirmation=this.checked;autoSave();"><span class="pill-slider"></span></label></div>
+        <div class="settings-row"><span>Upgrade Confirmation</span><label class="pill-toggle"><input type="checkbox" ${settings.upgradeConfirmation?'checked':''} onchange="settings.upgradeConfirmation=this.checked;autoSave();"><span class="pill-slider"></span></label></div>
+        <div class="settings-row"><span>Offline Rewards</span><label class="pill-toggle"><input type="checkbox" ${settings.offlineRewardsEnabled?'checked':''} onchange="settings.offlineRewardsEnabled=this.checked;autoSave();"><span class="pill-slider"></span></label></div>
+        <div class="settings-row"><span>Sound Effects</span><label class="pill-toggle"><input type="checkbox" ${settings.soundEnabled?'checked':''} onchange="settings.soundEnabled=this.checked;autoSave();"><span class="pill-slider"></span></label></div>
+    </div></div>`;
+    html+=`<div class="feature-card"><div class="settings-collapsible-header" onclick="toggleSettingsSection(this)"><span>INTERFACE</span><span style="font-size:.6rem;">▼</span></div><div class="settings-collapsible-content">
+        <div class="settings-row"><span>Collapse All Sections</span><label class="pill-toggle"><input type="checkbox" ${settings.collapseAllSections?'checked':''} onchange="settings.collapseAllSections=this.checked;document.querySelectorAll('.section-content').forEach(c=>c.classList.toggle('collapsed',settings.collapseAllSections));autoSave();"><span class="pill-slider"></span></label></div>
+    </div></div>`;
+    html+=`<div class="feature-card"><div class="settings-collapsible-header" onclick="toggleSettingsSection(this)"><span>DATA</span><span style="font-size:.6rem;">▼</span></div><div class="settings-collapsible-content">
+        <button class="modal-btn modal-btn-danger" onclick="resetSystem()">RESET SYSTEM</button>
+    </div></div>`;
+    html+=`<div class="feature-card"><div class="settings-collapsible-header" onclick="toggleSettingsSection(this)"><span>ETERNAL INFORMATION</span><span style="font-size:.6rem;">▼</span></div><div class="settings-collapsible-content">
+        <div class="eternal-text">The System Panel is the manifestation of your own will, Great Dao, and essence. It is the root of your evolution itself.<br><br>The "System Panel" is not something external, nor is it a gift bestowed by another existence. It is your own innate Evolution Root Talent, born as a part of your very existence.<br><br>It will always remain with you, accompanying you through every stage of growth, and will continue to exist alongside you for all eternity.</div>
+    </div></div>`;
+    html+=`<div class="modal-actions"><button class="modal-btn modal-btn-danger" onclick="logoutSystem()">LOGOUT</button><button class="modal-btn modal-btn-secondary" onclick="closeModal()">CLOSE</button></div>`;
+    openModal(html);
+    setTimeout(()=>{let d=document.getElementById('setNotifDuration');if(d)d.onchange=()=>{settings.notificationDurationMs=parseFloat(d.value)*1000;autoSave();};},50);
+}
+function toggleSettingsSection(hdr){let content=hdr.nextElementSibling;let arrow=hdr.querySelector('span:last-child');if(content.style.display==='none'||content.style.display===''){content.style.display='block';if(arrow)arrow.textContent='▲';}else{content.style.display='none';if(arrow)arrow.textContent='▼';}}
+function resetSystem(){showCustomConfirm("RESET SYSTEM","WARNING: This will erase all progress and reset the system. Continue?",()=>{localStorage.clear();location.reload();},()=>{});}
+
+function updateUI(){
+    try {
+        document.getElementById('hostNameDisplay').textContent=state.hostName;
+        let rp=getRealmProgress(state.realmIndex,state.realmLevel);
+        document.getElementById('realmDisplay').textContent=getRealmDisplay(state.realmIndex,state.realmLevel);
+        document.getElementById('realmProgressFill').style.width=rp.max===Infinity?'0%':rp.pct+'%';
+        document.getElementById('talentDisplay').textContent=state.talent;
+        document.getElementById('expText').textContent=`${state.exp} / 100`;
+        document.getElementById('expFill').style.width=(state.exp/100*100)+'%';
+        document.getElementById('voidEnergyValue').textContent=voidEnergy;
+        let rate=getAbsorptionRate();
+        document.getElementById('absorptionRateInfo').innerHTML=`Absorbing ${rate.min}-${rate.max} per 5 sec | Cost: ${getCultivationCost()} EP`;
+        let vb=document.getElementById('voidBarFill');if(vb)vb.style.width=(voidEnergy%100)+'%';
+        document.getElementById('epValue').textContent=fmt(state.ep);
+        document.getElementById('apValue').textContent=fmt(state.ap);
+        document.getElementById('systemLevelValue').textContent=state.level;
+        
+        let techHtml='';
+        (state.techniques || []).forEach((t,i)=>{
+            let st=getStageInfo(t.xp || 0);
+            techHtml+=`<div class="list-item"><span><span class="list-item-name">${t.name}</span><span class="list-item-rank">${st.name} (${st.current}/${st.max===Infinity?'∞':st.max})</span></span><button class="action-btn" onclick="grindTechnique(${i})">+</button></div>`;
+        });
+        document.getElementById('techniquesListContainer').innerHTML=techHtml||'<div style="color:var(--text-muted);text-align:center;padding:10px;">No techniques</div>';
+        
+        let spellHtml='';
+        (state.spells || []).forEach((s,i)=>{
+            let st=getStageInfo(s.xp || 0);
+            spellHtml+=`<div class="list-item"><span><span class="list-item-name">${s.name}</span><span class="list-item-rank">${st.name} (${st.current}/${st.max===Infinity?'∞':st.max})</span></span><button class="action-btn" onclick="grindSpell(${i})">+</button></div>`;
+        });
+        document.getElementById('spellsListContainer').innerHTML=spellHtml||'<div style="color:var(--text-muted);text-align:center;padding:10px;">No spells</div>';
+        
+        let container=document.getElementById('featuresContainer');
+        if(container) {
+            container.innerHTML='';
+            if(heavenFeatures && heavenFeatures.length){
+                let heavenDiv=document.createElement('div');
+                heavenDiv.className='feature-card';
+                heavenDiv.innerHTML=`<div class="feature-header"><span class="feature-title">✦ HEAVEN DEFYING ✦</span></div>`;
+                heavenFeatures.forEach(f=>{
+                    let lvl=heavenFeatureLevels[f.name]||1;
+                    heavenDiv.innerHTML+=`<div class="feature-desc"><strong>${f.name}</strong> Lv.${lvl}: ${lvl===1?f.baseEffect:f.upgradeEffect}</div>`;
+                });
+                container.appendChild(heavenDiv);
+            }
+            if(customFeatures && customFeatures.length){
+                let customDiv=document.createElement('div');
+                customDiv.className='feature-card';
+                customDiv.innerHTML=`<div class="feature-header"><span class="feature-title">✦ CUSTOM FEATURES ✦</span></div>`;
+                customFeatures.forEach(f=>{
+                    customDiv.innerHTML+=`<div class="feature-desc"><strong>${f.name}</strong>: ${f.concept.substring(0,80)}</div>`;
+                });
+                container.appendChild(customDiv);
+            }
+            (unlockedBaseFeatures || []).forEach(name => createBaseFeatureUI(name));
+        }
+    } catch(e) {
+        console.error("UI Update Failed:", e);
+    }
+}
+
+function toggleSection(header){let section=header.closest('.section');let content=section.querySelector('.section-content');let icon=header.querySelector('.toggle-icon');content.classList.toggle('collapsed');if(icon)icon.style.transform=content.classList.contains('collapsed')?'rotate(-90deg)':'';}
+function flashEffect(){document.body.style.animation='pulse 0.3s';setTimeout(()=>document.body.style.animation='',300);}
+function openModal(html){document.getElementById('overlayContent').innerHTML=html;document.getElementById('globalOverlay').classList.add('active');}
+function closeModal(){document.getElementById('globalOverlay').classList.remove('active');}
+document.getElementById('globalOverlay').addEventListener('click',function(e){if(e.target===this)closeModal();});
+function showCustomConfirm(title,msg,onConfirm,onCancel){openModal(`<h3 style="margin-bottom:10px;">${title}</h3><p style="margin-bottom:10px;">${msg}</p><div class="modal-actions"><button class="modal-btn modal-btn-primary" id="customConfirmOk">CONFIRM</button><button class="modal-btn modal-btn-secondary" id="customConfirmCancel">CANCEL</button></div>`);document.getElementById('customConfirmOk').onclick=()=>{closeModal();if(onConfirm)onConfirm();};document.getElementById('customConfirmCancel').onclick=()=>{closeModal();if(onCancel)onCancel();};}
+function openRenameUI(){openModal(`<h3 style="margin-bottom:10px;">RENAME HOST</h3><div class="modal-input"><input type="text" id="renameInput" value="${state.hostName}"></div><div class="modal-actions"><button class="modal-btn modal-btn-primary" onclick="confirmRename()">RENAME</button><button class="modal-btn modal-btn-secondary" onclick="closeModal()">CANCEL</button></div>`);}
+function confirmRename(){let n=document.getElementById('renameInput')?.value.trim();if(n){state.hostName=n;updateUI();autoSave();showNotification("Renamed",n,"success","system");}closeModal();}
+
+function autoSave(){
+    let data={state,voidEnergy,upgradeBonus,unlockedBaseFeatures,heavenFeatures,heavenFeatureLevels,customFeatures,storageItems,notificationHistory,lastOnlineTime:Date.now(),settings,notificationFilters,stats};
+    localStorage.setItem('systemPanelSave',JSON.stringify(data));
+    let ind=document.getElementById('saveIndicator');ind.classList.add('visible');setTimeout(()=>ind.classList.remove('visible'),500);
+}
+function autoLoad(){
+    let saved=localStorage.getItem('systemPanelSave');
+    if(saved){
+        let data=JSON.parse(saved);
+        Object.assign(state,data.state);
+        voidEnergy=data.voidEnergy??0;upgradeBonus=data.upgradeBonus??0;
+        unlockedBaseFeatures=data.unlockedBaseFeatures??[];heavenFeatures=data.heavenFeatures??[];
+        heavenFeatureLevels=data.heavenFeatureLevels??{};customFeatures=data.customFeatures??[];
+        storageItems=data.storageItems??[];notificationHistory=data.notificationHistory??[];
+        if(data.settings)Object.assign(settings,data.settings);
+        if(data.notificationFilters)Object.assign(notificationFilters,data.notificationFilters);
+        if(data.stats)Object.assign(stats,data.stats);
+        lastOnlineTime=data.lastOnlineTime??Date.now();
+        if(settings.offlineRewardsEnabled&&lastOnlineTime){
+            let diffSec=(Date.now()-lastOnlineTime)/1000,intervals=Math.floor(diffSec/5);
+            if(intervals>0){let rate=getAbsorptionRate(),total=0;for(let i=0;i<Math.min(intervals,200);i++)total+=rand(rate.min,rate.max);voidEnergy+=total;let mins=Math.floor(diffSec/60),hours=Math.floor(mins/60),timeStr=hours>0?`${hours}h ${mins%60}m`:`${mins}m`;if(total>0)showNotification("Offline Reward",`+${total} void energy (${timeStr} away)`,"success","absorption");}
+        }
+        return true;
+    }
+    return false;
+}
+
+document.addEventListener('DOMContentLoaded',()=>{
+    autoLoad();startAutoAbsorption();updateUI();
+    setAuthenticatedView(sessionStorage.getItem('systemPanelAuthenticated') === 'true');
+    document.getElementById('loginForm').addEventListener('submit',handleLogin);
+    document.getElementById('cultivateBtn').addEventListener('click',cultivate);
+    if(settings.collapseAllSections)document.querySelectorAll('.section-content').forEach(c=>c.classList.add('collapsed'));
+    if(settings.welcomeNotificationEnabled && sessionStorage.getItem('systemPanelAuthenticated') === 'true')showNotification("System Online",`Welcome, ${state.hostName}. The void awaits.`,"success","system");
+});
+window.addEventListener('beforeunload',()=>autoSave());
+</script>
+</body>
+</html>
