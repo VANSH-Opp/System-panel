@@ -477,7 +477,12 @@
             font-size: 12px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.3);
             animation: slideIn 0.3s ease-out;
+            cursor: grab;
+            touch-action: pan-y;
+            user-select: none;
+            will-change: transform, opacity;
         }
+        .notification-card.swiping { transition: none; }
         .notification-card.success { border-left-color: var(--success); }
         .notification-card.error { border-left-color: var(--danger); }
         .notification-card.warning { border-left-color: var(--warning); }
@@ -934,8 +939,6 @@
         <div class="header-actions">
             <button class="header-btn" onclick="openLogAndStats('logs')">[DATA]</button>
             <button class="header-btn" onclick="openSettings()">[SET]</button>
-            <button class="header-btn" onclick="downloadCompleteHtml()">[DOWNLOAD]</button>
-            <button class="header-btn" onclick="logoutSystem()">[LOGOUT]</button>
         </div>
     </header>
 
@@ -1145,19 +1148,7 @@ function logoutSystem(){
     const error = document.getElementById('loginError');
     if(pass) pass.value = '';
     if(error) error.textContent = '';
-}
-function downloadCompleteHtml(){
-    const html = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
-    const blob = new Blob([html], {type:'text/html'});
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = 'system-panel-complete.html';
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-    URL.revokeObjectURL(url);
-    showNotification("Download Ready","Complete HTML file saved as system-panel-complete.html","success","system");
+    closeModal();
 }
 
 let realms = ["Awakening Realm","Origin Condensation Realm","Origin Sea Realm","Purple Mansion Realm","True Spirit Realm","Mystic Conception Realm","True Seed Creation Realm","Mortal Transcendence Realm","Longevity Realm","Law Perception Realm","Law Assimilation Realm","Origin Principle Realm","Origin Creation Realm","Dao Evolution Realm","Infinite Great Dao Realm","Transcendence"];
@@ -1882,6 +1873,56 @@ function useLawInsight() {
 
 function addToInventory(name,qty){let ex=storageItems.find(i=>i.name===name);if(ex)ex.quantity+=qty;else storageItems.push({name,quantity:qty});autoSave();}
 
+function dismissNotification(notif, direction='right'){
+    if(!notif?.parentNode)return;
+    if(notif.cleanupSwipe)notif.cleanupSwipe();
+    const distance = direction === 'up' ? -80 : (direction === 'left' ? -140 : 140);
+    notif.classList.remove('swiping');
+    notif.style.transition='0.3s ease';
+    notif.style.opacity='0';
+    notif.style.transform=direction === 'up' ? `translateY(${distance}px)` : `translateX(${distance}px)`;
+    setTimeout(()=>{if(notif.parentNode)notif.remove();if(currentNotification===notif)currentNotification=null;},300);
+}
+function enableNotificationSwipe(notif){
+    let startX=0,startY=0,dragX=0,dragY=0,dragging=false;
+    const start=e=>{
+        const point=e.touches?.[0]||e;
+        startX=point.clientX;startY=point.clientY;dragX=0;dragY=0;dragging=true;
+        notif.classList.add('swiping');
+    };
+    const move=e=>{
+        if(!dragging)return;
+        const point=e.touches?.[0]||e;
+        dragX=point.clientX-startX;dragY=point.clientY-startY;
+        if(Math.abs(dragX)>8||dragY<-8){
+            if(e.cancelable)e.preventDefault();
+            notif.style.transform=`translate(${dragX}px, ${Math.min(0,dragY)}px)`;
+            notif.style.opacity=String(Math.max(0.35,1-(Math.abs(dragX)+Math.max(0,-dragY))/220));
+        }
+    };
+    const end=()=>{
+        if(!dragging)return;
+        dragging=false;
+        notif.classList.remove('swiping');
+        if(Math.abs(dragX)>70||dragY<-55){
+            dismissNotification(notif,dragY<-55?'up':(dragX<0?'left':'right'));
+            return;
+        }
+        notif.style.transition='0.2s ease';
+        notif.style.opacity='1';
+        notif.style.transform='translate(0, 0)';
+    };
+    notif.addEventListener('touchstart',start,{passive:true});
+    notif.addEventListener('touchmove',move,{passive:false});
+    notif.addEventListener('touchend',end);
+    notif.addEventListener('mousedown',start);
+    window.addEventListener('mousemove',move);
+    window.addEventListener('mouseup',end);
+    notif.cleanupSwipe=()=>{
+        window.removeEventListener('mousemove',move);
+        window.removeEventListener('mouseup',end);
+    };
+}
 function showNotification(title,message,type='info',category='system'){
     if(!notificationFilters[category])return;
     notificationHistory.unshift({title,message,type,category,time:new Date().toLocaleTimeString(),date:new Date().toLocaleDateString()});
@@ -1893,7 +1934,8 @@ function showNotification(title,message,type='info',category='system'){
     notif.innerHTML=`<div class="notif-title">[${title.toUpperCase()}]</div><div class="notif-message">${message}</div><div class="notif-time">${new Date().toLocaleTimeString()}</div>`;
     container.appendChild(notif);
     currentNotification=notif;
-    setTimeout(()=>{if(notif.parentNode&&currentNotification===notif){notif.style.opacity='0';notif.style.transform='translateX(100px)';notif.style.transition='0.3s';setTimeout(()=>{if(notif.parentNode)notif.remove();if(currentNotification===notif)currentNotification=null;},300);}},settings.notificationDurationMs);
+    enableNotificationSwipe(notif);
+    setTimeout(()=>{if(notif.parentNode&&currentNotification===notif)dismissNotification(notif,'right');},settings.notificationDurationMs);
 }
 
 function openLogAndStats(currentTab = 'logs') {
@@ -1980,7 +2022,7 @@ function openSettings(){
     html+=`<div class="feature-card"><div class="settings-collapsible-header" onclick="toggleSettingsSection(this)"><span>ETERNAL INFORMATION</span><span style="font-size:.6rem;">▼</span></div><div class="settings-collapsible-content">
         <div class="eternal-text">The System Panel is the manifestation of your own will, Great Dao, and essence. It is the root of your evolution itself.<br><br>The "System Panel" is not something external, nor is it a gift bestowed by another existence. It is your own innate Evolution Root Talent, born as a part of your very existence.<br><br>It will always remain with you, accompanying you through every stage of growth, and will continue to exist alongside you for all eternity.</div>
     </div></div>`;
-    html+=`<div class="modal-actions"><button class="modal-btn modal-btn-secondary" onclick="closeModal()">CLOSE</button></div>`;
+    html+=`<div class="modal-actions"><button class="modal-btn modal-btn-danger" onclick="logoutSystem()">LOGOUT</button><button class="modal-btn modal-btn-secondary" onclick="closeModal()">CLOSE</button></div>`;
     openModal(html);
     setTimeout(()=>{let d=document.getElementById('setNotifDuration');if(d)d.onchange=()=>{settings.notificationDurationMs=parseFloat(d.value)*1000;autoSave();};},50);
 }
