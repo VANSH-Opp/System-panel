@@ -477,7 +477,12 @@
             font-size: 12px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.3);
             animation: slideIn 0.3s ease-out;
+            cursor: grab;
+            touch-action: pan-y;
+            user-select: none;
+            will-change: transform, opacity;
         }
+        .notification-card.swiping { transition: none; }
         .notification-card.success { border-left-color: var(--success); }
         .notification-card.error { border-left-color: var(--danger); }
         .notification-card.warning { border-left-color: var(--warning); }
@@ -807,13 +812,128 @@
         .mat-pill.tech { border-left: 2px solid var(--success); }
         .mat-pill.item { border-left: 2px solid var(--warning); }
 
+
+
+        .login-screen {
+            width: 100%;
+            min-height: calc(100vh - 40px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px 0;
+        }
+        .login-card {
+            width: min(100%, 420px);
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-lg), 0 0 60px rgba(124, 92, 255, 0.12);
+            padding: 28px;
+            position: relative;
+            overflow: hidden;
+        }
+        .login-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at top right, rgba(124, 92, 255, 0.18), transparent 45%);
+            pointer-events: none;
+        }
+        .login-title {
+            color: var(--accent-primary);
+            font-size: 1.15rem;
+            font-weight: 800;
+            letter-spacing: 2px;
+            text-align: center;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+            position: relative;
+        }
+        .login-subtitle {
+            color: var(--text-secondary);
+            font-size: 0.78rem;
+            text-align: center;
+            margin-bottom: 22px;
+            position: relative;
+        }
+        .login-form {
+            display: grid;
+            gap: 14px;
+            position: relative;
+        }
+        .login-label {
+            display: block;
+            color: var(--text-muted);
+            font-size: 0.68rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+        }
+        .login-input {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            color: var(--text-primary);
+            font-size: 0.95rem;
+            padding: 12px 14px;
+            transition: var(--transition);
+        }
+        .login-input:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 3px rgba(124, 92, 255, 0.16);
+        }
+        .login-btn {
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            border: none;
+            border-radius: var(--radius-md);
+            color: white;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 800;
+            letter-spacing: 1px;
+            margin-top: 4px;
+            padding: 13px;
+            text-transform: uppercase;
+            transition: var(--transition);
+        }
+        .login-btn:hover { box-shadow: 0 0 24px var(--accent-glow); transform: translateY(-1px); }
+        .login-error {
+            min-height: 18px;
+            color: var(--danger);
+            font-size: 0.74rem;
+            text-align: center;
+        }
+        .system-container.auth-locked { display: none; }
+
         @media (max-width: 550px) {
             .core-stats { grid-template-columns: 1fr; }
         }
     </style>
 </head>
 <body>
-<div class="system-container" id="mainPanel">
+<div class="login-screen" id="loginScreen">
+    <div class="login-card">
+        <h1 class="login-title">⟦ System Access ⟧</h1>
+        <p class="login-subtitle">Enter your creator credentials to unlock the panel.</p>
+        <form class="login-form" id="loginForm" autocomplete="off">
+            <div>
+                <label class="login-label" for="loginId">ID</label>
+                <input class="login-input" id="loginId" type="text" placeholder="Enter ID" autocomplete="username" required>
+            </div>
+            <div>
+                <label class="login-label" for="loginPass">Pass</label>
+                <input class="login-input" id="loginPass" type="password" placeholder="Enter pass" autocomplete="current-password" required>
+            </div>
+            <button class="login-btn" type="submit">Enter System</button>
+            <div class="login-error" id="loginError" aria-live="polite"></div>
+        </form>
+    </div>
+</div>
+<div class="system-container auth-locked" id="mainPanel">
     <header class="panel-header">
         <h1 class="panel-title">⟦ SYSTEM PANEL ⟧</h1>
         <div class="header-actions">
@@ -945,6 +1065,92 @@
 // ──────────────────────────────────────────────
 //  FULL SYSTEM PANEL v3 + REALM PROGRESS + STATS + SOUND
 // ──────────────────────────────────────────────
+
+const LOGIN_ID_HASH = "5f3270038d32b4cb02d8497c5f07e37e507fee2d24e57453bfa3ae58cd436030";
+const LOGIN_PASS_HASH = "e86bbd43206627907646dd63c1dbc9edd2f54fd4918603eab588fae216a0b571";
+
+async function hashCredential(value){
+    if(window.crypto?.subtle && window.TextEncoder){
+        const bytes = new TextEncoder().encode(value);
+        const digest = await crypto.subtle.digest('SHA-256', bytes);
+        return [...new Uint8Array(digest)].map(byte=>byte.toString(16).padStart(2,'0')).join('');
+    }
+    return sha256Fallback(value);
+}
+function sha256Fallback(value){
+    const rotateRight=(n,x)=>(x>>>n)|(x<<(32-n));
+    const utf8=unescape(encodeURIComponent(value));
+    const words=[];
+    for(let i=0;i<utf8.length;i++) words[i>>2]|=utf8.charCodeAt(i)<<((3-i)%4*8);
+    words[utf8.length>>2]|=0x80<<((3-utf8.length)%4*8);
+    words[((utf8.length+8>>6)<<4)+15]=utf8.length*8;
+    const primes=[], hash=[], k=[];
+    let candidate=2;
+    while(k.length<64){
+        let isPrime=true;
+        for(let i=2;i*i<=candidate;i++) if(candidate%i===0){isPrime=false;break;}
+        if(isPrime){
+            primes.push(candidate);
+            const root=Math.sqrt(candidate), cube=Math.cbrt(candidate);
+            if(hash.length<8) hash.push((root%1)*0x100000000|0);
+            k.push((cube%1)*0x100000000|0);
+        }
+        candidate++;
+    }
+    for(let i=0;i<words.length;i+=16){
+        const w=Array(64).fill(0);
+        for(let j=0;j<16;j++) w[j]=words[i+j]||0;
+        let [a,b,c,d,e,f,g,h]=hash;
+        for(let j=0;j<64;j++){
+            if(j>=16){
+                const s0=rotateRight(7,w[j-15])^rotateRight(18,w[j-15])^(w[j-15]>>>3);
+                const s1=rotateRight(17,w[j-2])^rotateRight(19,w[j-2])^(w[j-2]>>>10);
+                w[j]=(w[j-16]+s0+w[j-7]+s1)|0;
+            }
+            const s1=rotateRight(6,e)^rotateRight(11,e)^rotateRight(25,e);
+            const ch=(e&f)^(~e&g);
+            const temp1=(h+s1+ch+k[j]+w[j])|0;
+            const s0=rotateRight(2,a)^rotateRight(13,a)^rotateRight(22,a);
+            const maj=(a&b)^(a&c)^(b&c);
+            const temp2=(s0+maj)|0;
+            h=g;g=f;f=e;e=(d+temp1)|0;d=c;c=b;b=a;a=(temp1+temp2)|0;
+        }
+        hash[0]=(hash[0]+a)|0;hash[1]=(hash[1]+b)|0;hash[2]=(hash[2]+c)|0;hash[3]=(hash[3]+d)|0;
+        hash[4]=(hash[4]+e)|0;hash[5]=(hash[5]+f)|0;hash[6]=(hash[6]+g)|0;hash[7]=(hash[7]+h)|0;
+    }
+    return hash.map(h=>(h>>>0).toString(16).padStart(8,'0')).join('');
+}
+function setAuthenticatedView(isAuthenticated){
+    const loginScreen = document.getElementById('loginScreen');
+    const mainPanel = document.getElementById('mainPanel');
+    if(loginScreen) loginScreen.style.display = isAuthenticated ? 'none' : 'flex';
+    if(mainPanel) mainPanel.classList.toggle('auth-locked', !isAuthenticated);
+}
+async function handleLogin(event){
+    event.preventDefault();
+    const id = document.getElementById('loginId')?.value.trim() || '';
+    const pass = document.getElementById('loginPass')?.value || '';
+    const error = document.getElementById('loginError');
+    const [idHash, passHash] = await Promise.all([hashCredential(id), hashCredential(pass)]);
+    if(idHash === LOGIN_ID_HASH && passHash === LOGIN_PASS_HASH){
+        if(error) error.textContent = "";
+        sessionStorage.setItem('systemPanelAuthenticated','true');
+        setAuthenticatedView(true);
+        showNotification("Access Granted","Welcome back, Creator.","success","system");
+        return;
+    }
+    if(error) error.textContent = "Invalid ID or pass. Try again.";
+}
+function logoutSystem(){
+    sessionStorage.removeItem('systemPanelAuthenticated');
+    setAuthenticatedView(false);
+    const pass = document.getElementById('loginPass');
+    const error = document.getElementById('loginError');
+    if(pass) pass.value = '';
+    if(error) error.textContent = '';
+    closeModal();
+}
+
 let realms = ["Awakening Realm","Origin Condensation Realm","Origin Sea Realm","Purple Mansion Realm","True Spirit Realm","Mystic Conception Realm","True Seed Creation Realm","Mortal Transcendence Realm","Longevity Realm","Law Perception Realm","Law Assimilation Realm","Origin Principle Realm","Origin Creation Realm","Dao Evolution Realm","Infinite Great Dao Realm","Transcendence"];
 
 let state = {
@@ -1667,6 +1873,56 @@ function useLawInsight() {
 
 function addToInventory(name,qty){let ex=storageItems.find(i=>i.name===name);if(ex)ex.quantity+=qty;else storageItems.push({name,quantity:qty});autoSave();}
 
+function dismissNotification(notif, direction='right'){
+    if(!notif?.parentNode)return;
+    if(notif.cleanupSwipe)notif.cleanupSwipe();
+    const distance = direction === 'up' ? -80 : (direction === 'left' ? -140 : 140);
+    notif.classList.remove('swiping');
+    notif.style.transition='0.3s ease';
+    notif.style.opacity='0';
+    notif.style.transform=direction === 'up' ? `translateY(${distance}px)` : `translateX(${distance}px)`;
+    setTimeout(()=>{if(notif.parentNode)notif.remove();if(currentNotification===notif)currentNotification=null;},300);
+}
+function enableNotificationSwipe(notif){
+    let startX=0,startY=0,dragX=0,dragY=0,dragging=false;
+    const start=e=>{
+        const point=e.touches?.[0]||e;
+        startX=point.clientX;startY=point.clientY;dragX=0;dragY=0;dragging=true;
+        notif.classList.add('swiping');
+    };
+    const move=e=>{
+        if(!dragging)return;
+        const point=e.touches?.[0]||e;
+        dragX=point.clientX-startX;dragY=point.clientY-startY;
+        if(Math.abs(dragX)>8||dragY<-8){
+            if(e.cancelable)e.preventDefault();
+            notif.style.transform=`translate(${dragX}px, ${Math.min(0,dragY)}px)`;
+            notif.style.opacity=String(Math.max(0.35,1-(Math.abs(dragX)+Math.max(0,-dragY))/220));
+        }
+    };
+    const end=()=>{
+        if(!dragging)return;
+        dragging=false;
+        notif.classList.remove('swiping');
+        if(Math.abs(dragX)>70||dragY<-55){
+            dismissNotification(notif,dragY<-55?'up':(dragX<0?'left':'right'));
+            return;
+        }
+        notif.style.transition='0.2s ease';
+        notif.style.opacity='1';
+        notif.style.transform='translate(0, 0)';
+    };
+    notif.addEventListener('touchstart',start,{passive:true});
+    notif.addEventListener('touchmove',move,{passive:false});
+    notif.addEventListener('touchend',end);
+    notif.addEventListener('mousedown',start);
+    window.addEventListener('mousemove',move);
+    window.addEventListener('mouseup',end);
+    notif.cleanupSwipe=()=>{
+        window.removeEventListener('mousemove',move);
+        window.removeEventListener('mouseup',end);
+    };
+}
 function showNotification(title,message,type='info',category='system'){
     if(!notificationFilters[category])return;
     notificationHistory.unshift({title,message,type,category,time:new Date().toLocaleTimeString(),date:new Date().toLocaleDateString()});
@@ -1678,7 +1934,8 @@ function showNotification(title,message,type='info',category='system'){
     notif.innerHTML=`<div class="notif-title">[${title.toUpperCase()}]</div><div class="notif-message">${message}</div><div class="notif-time">${new Date().toLocaleTimeString()}</div>`;
     container.appendChild(notif);
     currentNotification=notif;
-    setTimeout(()=>{if(notif.parentNode&&currentNotification===notif){notif.style.opacity='0';notif.style.transform='translateX(100px)';notif.style.transition='0.3s';setTimeout(()=>{if(notif.parentNode)notif.remove();if(currentNotification===notif)currentNotification=null;},300);}},settings.notificationDurationMs);
+    enableNotificationSwipe(notif);
+    setTimeout(()=>{if(notif.parentNode&&currentNotification===notif)dismissNotification(notif,'right');},settings.notificationDurationMs);
 }
 
 function openLogAndStats(currentTab = 'logs') {
@@ -1765,7 +2022,7 @@ function openSettings(){
     html+=`<div class="feature-card"><div class="settings-collapsible-header" onclick="toggleSettingsSection(this)"><span>ETERNAL INFORMATION</span><span style="font-size:.6rem;">▼</span></div><div class="settings-collapsible-content">
         <div class="eternal-text">The System Panel is the manifestation of your own will, Great Dao, and essence. It is the root of your evolution itself.<br><br>The "System Panel" is not something external, nor is it a gift bestowed by another existence. It is your own innate Evolution Root Talent, born as a part of your very existence.<br><br>It will always remain with you, accompanying you through every stage of growth, and will continue to exist alongside you for all eternity.</div>
     </div></div>`;
-    html+=`<div class="modal-actions"><button class="modal-btn modal-btn-secondary" onclick="closeModal()">CLOSE</button></div>`;
+    html+=`<div class="modal-actions"><button class="modal-btn modal-btn-danger" onclick="logoutSystem()">LOGOUT</button><button class="modal-btn modal-btn-secondary" onclick="closeModal()">CLOSE</button></div>`;
     openModal(html);
     setTimeout(()=>{let d=document.getElementById('setNotifDuration');if(d)d.onchange=()=>{settings.notificationDurationMs=parseFloat(d.value)*1000;autoSave();};},50);
 }
@@ -1870,9 +2127,11 @@ function autoLoad(){
 
 document.addEventListener('DOMContentLoaded',()=>{
     autoLoad();startAutoAbsorption();updateUI();
+    setAuthenticatedView(sessionStorage.getItem('systemPanelAuthenticated') === 'true');
+    document.getElementById('loginForm').addEventListener('submit',handleLogin);
     document.getElementById('cultivateBtn').addEventListener('click',cultivate);
     if(settings.collapseAllSections)document.querySelectorAll('.section-content').forEach(c=>c.classList.add('collapsed'));
-    if(settings.welcomeNotificationEnabled)showNotification("System Online",`Welcome, ${state.hostName}. The void awaits.`,"success","system");
+    if(settings.welcomeNotificationEnabled && sessionStorage.getItem('systemPanelAuthenticated') === 'true')showNotification("System Online",`Welcome, ${state.hostName}. The void awaits.`,"success","system");
 });
 window.addEventListener('beforeunload',()=>autoSave());
 </script>
