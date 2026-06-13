@@ -901,6 +901,21 @@
             transition: var(--transition);
         }
         .login-btn:hover { box-shadow: 0 0 24px var(--accent-glow); transform: translateY(-1px); }
+        .login-link-btn {
+            background: none;
+            border: none;
+            color: var(--accent-primary);
+            cursor: pointer;
+            font-size: 0.78rem;
+            font-weight: 700;
+            padding: 2px 4px;
+        }
+        .login-link-btn:hover { text-decoration: underline; }
+        .login-switch-text {
+            color: var(--text-secondary);
+            font-size: 0.76rem;
+            text-align: center;
+        }
         .login-error {
             min-height: 18px;
             color: var(--danger);
@@ -917,8 +932,8 @@
 <body>
 <div class="login-screen" id="loginScreen">
     <div class="login-card">
-        <h1 class="login-title">⟦ System Access ⟧</h1>
-        <p class="login-subtitle">Enter your creator credentials to unlock the panel.</p>
+        <h1 class="login-title" id="authTitle">⟦ System Access ⟧</h1>
+        <p class="login-subtitle" id="authSubtitle">Enter your creator credentials to unlock the panel.</p>
         <form class="login-form" id="loginForm" autocomplete="off">
             <div>
                 <label class="login-label" for="loginId">ID</label>
@@ -929,10 +944,10 @@
                 <input class="login-input" id="loginPass" type="password" placeholder="Enter pass" autocomplete="current-password" required>
             </div>
             <button class="login-btn" type="submit">Enter System</button>
-            <button class="login-btn" type="button" onclick="toggleCreateAccount()">Create Account</button>
+            <p class="login-switch-text">New here? <button class="login-link-btn" type="button" onclick="showCreateAccount()">Create account</button></p>
             <div class="login-error" id="loginError" aria-live="polite"></div>
         </form>
-        <form class="login-form" id="createAccountForm" autocomplete="off" style="display:none; margin-top:16px; padding-top:16px; border-top:1px solid var(--border-color);">
+        <form class="login-form" id="createAccountForm" autocomplete="off" style="display:none;">
             <div>
                 <label class="login-label" for="newHostName">Host Name</label>
                 <input class="login-input" id="newHostName" type="text" placeholder="Choose host name" required>
@@ -946,6 +961,7 @@
                 <input class="login-input" id="newLoginPass" type="password" placeholder="Choose pass" autocomplete="new-password" required>
             </div>
             <button class="login-btn" type="submit">Save Account</button>
+            <p class="login-switch-text">Already have an account? <button class="login-link-btn" type="button" onclick="showLoginForm()">Back to login</button></p>
             <div class="login-error" id="createAccountError" aria-live="polite"></div>
         </form>
     </div>
@@ -1094,9 +1110,25 @@ function getSavedAccounts(){
     catch(e){ return []; }
 }
 function saveAccounts(accounts){ localStorage.setItem('systemPanelAccounts', JSON.stringify(accounts)); }
-function toggleCreateAccount(){
-    const form=document.getElementById('createAccountForm');
-    if(form)form.style.display=form.style.display==='none'||!form.style.display?'grid':'none';
+function showCreateAccount(){
+    const loginForm=document.getElementById('loginForm');
+    const createForm=document.getElementById('createAccountForm');
+    const title=document.getElementById('authTitle');
+    const subtitle=document.getElementById('authSubtitle');
+    if(loginForm)loginForm.style.display='none';
+    if(createForm)createForm.style.display='grid';
+    if(title)title.textContent='⟦ Create Account ⟧';
+    if(subtitle)subtitle.textContent='Choose your account and default host name.';
+}
+function showLoginForm(){
+    const loginForm=document.getElementById('loginForm');
+    const createForm=document.getElementById('createAccountForm');
+    const title=document.getElementById('authTitle');
+    const subtitle=document.getElementById('authSubtitle');
+    if(createForm)createForm.style.display='none';
+    if(loginForm)loginForm.style.display='grid';
+    if(title)title.textContent='⟦ System Access ⟧';
+    if(subtitle)subtitle.textContent='Enter your creator credentials to unlock the panel.';
 }
 
 async function hashCredential(value){
@@ -1203,7 +1235,7 @@ async function createAccount(event){
     document.getElementById('loginId').value=id;
     document.getElementById('loginPass').value=pass;
     document.getElementById('createAccountForm').reset();
-    document.getElementById('createAccountForm').style.display='none';
+    showLoginForm();
     if(error)error.textContent='';
     if(document.getElementById('loginError'))document.getElementById('loginError').textContent='Account created. Press Enter System.';
 }
