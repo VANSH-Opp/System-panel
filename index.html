@@ -930,39 +930,18 @@
     </style>
 </head>
 <body>
-<div class="login-screen" id="loginScreen">
+<div class="login-screen" id="hostBindScreen">
     <div class="login-card">
-        <h1 class="login-title" id="authTitle">⟦ System Access ⟧</h1>
-        <p class="login-subtitle" id="authSubtitle">Enter your creator credentials to unlock the panel.</p>
-        <form class="login-form" id="loginForm" autocomplete="off">
+        <h1 class="login-title">⟦ Bind Host ⟧</h1>
+        <p class="login-subtitle">Choose the Host name this System Panel will awaken with.</p>
+        <form class="login-form" id="hostBindForm" autocomplete="off">
             <div>
-                <label class="login-label" for="loginId">ID</label>
-                <input class="login-input" id="loginId" type="text" placeholder="Enter ID" autocomplete="username" required>
+                <label class="login-label" for="bindHostName">Host Name</label>
+                <input class="login-input" id="bindHostName" type="text" placeholder="Enter Host name" required>
             </div>
-            <div>
-                <label class="login-label" for="loginPass">Pass</label>
-                <input class="login-input" id="loginPass" type="password" placeholder="Enter pass" autocomplete="current-password" required>
-            </div>
-            <button class="login-btn" type="submit">Enter System</button>
-            <p class="login-switch-text">New here? <button class="login-link-btn" type="button" onclick="showCreateAccount()">Create account</button></p>
-            <div class="login-error" id="loginError" aria-live="polite"></div>
-        </form>
-        <form class="login-form" id="createAccountForm" autocomplete="off" style="display:none;">
-            <div>
-                <label class="login-label" for="newHostName">Host Name</label>
-                <input class="login-input" id="newHostName" type="text" placeholder="Choose host name" required>
-            </div>
-            <div>
-                <label class="login-label" for="newLoginId">New ID</label>
-                <input class="login-input" id="newLoginId" type="text" placeholder="Choose ID" autocomplete="username" required>
-            </div>
-            <div>
-                <label class="login-label" for="newLoginPass">New Pass</label>
-                <input class="login-input" id="newLoginPass" type="password" placeholder="Choose pass" autocomplete="new-password" required>
-            </div>
-            <button class="login-btn" type="submit">Save Account</button>
-            <p class="login-switch-text">Already have an account? <button class="login-link-btn" type="button" onclick="showLoginForm()">Back to login</button></p>
-            <div class="login-error" id="createAccountError" aria-live="polite"></div>
+            <button class="login-btn" type="submit">Start System</button>
+            <p class="login-switch-text">You can change, export, import, recover, or delete data later in Settings.</p>
+            <div class="login-error" id="hostBindError" aria-live="polite"></div>
         </form>
     </div>
 </div>
@@ -1099,157 +1078,43 @@
 //  FULL SYSTEM PANEL v3 + REALM PROGRESS + STATS + SOUND
 // ──────────────────────────────────────────────
 
-const LOGIN_ID_HASH = "5f3270038d32b4cb02d8497c5f07e37e507fee2d24e57453bfa3ae58cd436030";
-const LOGIN_PASS_HASH = "e86bbd43206627907646dd63c1dbc9edd2f54fd4918603eab588fae216a0b571";
-const CREATOR_ACCOUNT = "creator";
-let currentAccountType = sessionStorage.getItem('systemPanelAccountType') || null;
 let systemStarted = false;
 
-function getSavedAccounts(){
-    try { return JSON.parse(localStorage.getItem('systemPanelAccounts') || '[]'); }
-    catch(e){ return []; }
-}
-function saveAccounts(accounts){ localStorage.setItem('systemPanelAccounts', JSON.stringify(accounts)); }
-function showCreateAccount(){
-    const loginForm=document.getElementById('loginForm');
-    const createForm=document.getElementById('createAccountForm');
-    const title=document.getElementById('authTitle');
-    const subtitle=document.getElementById('authSubtitle');
-    if(loginForm)loginForm.style.display='none';
-    if(createForm)createForm.style.display='grid';
-    if(title)title.textContent='⟦ Create Account ⟧';
-    if(subtitle)subtitle.textContent='Choose your account and default host name.';
-}
-function showLoginForm(){
-    const loginForm=document.getElementById('loginForm');
-    const createForm=document.getElementById('createAccountForm');
-    const title=document.getElementById('authTitle');
-    const subtitle=document.getElementById('authSubtitle');
-    if(createForm)createForm.style.display='none';
-    if(loginForm)loginForm.style.display='grid';
-    if(title)title.textContent='⟦ System Access ⟧';
-    if(subtitle)subtitle.textContent='Enter your creator credentials to unlock the panel.';
-}
-
-async function hashCredential(value){
-    if(window.crypto?.subtle && window.TextEncoder){
-        const bytes = new TextEncoder().encode(value);
-        const digest = await crypto.subtle.digest('SHA-256', bytes);
-        return [...new Uint8Array(digest)].map(byte=>byte.toString(16).padStart(2,'0')).join('');
-    }
-    return sha256Fallback(value);
-}
-function sha256Fallback(value){
-    const rotateRight=(n,x)=>(x>>>n)|(x<<(32-n));
-    const utf8=unescape(encodeURIComponent(value));
-    const words=[];
-    for(let i=0;i<utf8.length;i++) words[i>>2]|=utf8.charCodeAt(i)<<((3-i)%4*8);
-    words[utf8.length>>2]|=0x80<<((3-utf8.length)%4*8);
-    words[((utf8.length+8>>6)<<4)+15]=utf8.length*8;
-    const primes=[], hash=[], k=[];
-    let candidate=2;
-    while(k.length<64){
-        let isPrime=true;
-        for(let i=2;i*i<=candidate;i++) if(candidate%i===0){isPrime=false;break;}
-        if(isPrime){
-            primes.push(candidate);
-            const root=Math.sqrt(candidate), cube=Math.cbrt(candidate);
-            if(hash.length<8) hash.push((root%1)*0x100000000|0);
-            k.push((cube%1)*0x100000000|0);
-        }
-        candidate++;
-    }
-    for(let i=0;i<words.length;i+=16){
-        const w=Array(64).fill(0);
-        for(let j=0;j<16;j++) w[j]=words[i+j]||0;
-        let [a,b,c,d,e,f,g,h]=hash;
-        for(let j=0;j<64;j++){
-            if(j>=16){
-                const s0=rotateRight(7,w[j-15])^rotateRight(18,w[j-15])^(w[j-15]>>>3);
-                const s1=rotateRight(17,w[j-2])^rotateRight(19,w[j-2])^(w[j-2]>>>10);
-                w[j]=(w[j-16]+s0+w[j-7]+s1)|0;
-            }
-            const s1=rotateRight(6,e)^rotateRight(11,e)^rotateRight(25,e);
-            const ch=(e&f)^(~e&g);
-            const temp1=(h+s1+ch+k[j]+w[j])|0;
-            const s0=rotateRight(2,a)^rotateRight(13,a)^rotateRight(22,a);
-            const maj=(a&b)^(a&c)^(b&c);
-            const temp2=(s0+maj)|0;
-            h=g;g=f;f=e;e=(d+temp1)|0;d=c;c=b;b=a;a=(temp1+temp2)|0;
-        }
-        hash[0]=(hash[0]+a)|0;hash[1]=(hash[1]+b)|0;hash[2]=(hash[2]+c)|0;hash[3]=(hash[3]+d)|0;
-        hash[4]=(hash[4]+e)|0;hash[5]=(hash[5]+f)|0;hash[6]=(hash[6]+g)|0;hash[7]=(hash[7]+h)|0;
-    }
-    return hash.map(h=>(h>>>0).toString(16).padStart(8,'0')).join('');
-}
-function setAuthenticatedView(isAuthenticated){
-    const loginScreen = document.getElementById('loginScreen');
+function getBoundHostName(){ return localStorage.getItem('systemPanelHostName') || ''; }
+function setBoundHostName(name){ localStorage.setItem('systemPanelHostName', name); }
+function setSystemView(isStarted){
+    const bindScreen = document.getElementById('hostBindScreen');
     const mainPanel = document.getElementById('mainPanel');
-    if(loginScreen) loginScreen.style.display = isAuthenticated ? 'none' : 'flex';
-    if(mainPanel) mainPanel.classList.toggle('auth-locked', !isAuthenticated);
+    if(bindScreen) bindScreen.style.display = isStarted ? 'none' : 'flex';
+    if(mainPanel) mainPanel.classList.toggle('auth-locked', !isStarted);
 }
-async function handleLogin(event){
-    event.preventDefault();
-    const id = document.getElementById('loginId')?.value.trim() || '';
-    const pass = document.getElementById('loginPass')?.value || '';
-    const error = document.getElementById('loginError');
-    const [idHash, passHash] = await Promise.all([hashCredential(id), hashCredential(pass)]);
-    if(idHash === LOGIN_ID_HASH && passHash === LOGIN_PASS_HASH){
-        if(error) error.textContent = "";
-        sessionStorage.setItem('systemPanelAuthenticated','true');
-        sessionStorage.setItem('systemPanelAccountType',CREATOR_ACCOUNT);
-        currentAccountType = CREATOR_ACCOUNT;
-        startSystemAfterLogin();
-        setAuthenticatedView(true);
-        showNotification("Access Granted","Welcome back, Creator.","success","system");
-        return;
-    }
-    const account = getSavedAccounts().find(a=>a.idHash===idHash && a.passHash===passHash);
-    if(account){
-        if(error) error.textContent = "";
-        sessionStorage.setItem('systemPanelAuthenticated','true');
-        sessionStorage.setItem('systemPanelAccountType','user');
-        currentAccountType = 'user';
-        state.hostName = account.hostName;
-        startSystemAfterLogin();
-        setAuthenticatedView(true);
-        updateUI();
-        autoSave();
-        showNotification("Access Granted",`Welcome, ${state.hostName}.`,"success","system");
-        return;
-    }
-    if(error) error.textContent = "Invalid ID or pass. Try again.";
+function bindHostAndStart(event){
+    if(event)event.preventDefault();
+    const input=document.getElementById('bindHostName');
+    const error=document.getElementById('hostBindError');
+    const name=(input?.value||'').trim();
+    if(!name){if(error)error.textContent='Choose a Host name.';return;}
+    state.hostName=name;
+    setBoundHostName(name);
+    startSystemAfterHostBind();
+    setSystemView(true);
+    updateUI();
+    autoSave();
+    showNotification('System Bound',`Welcome, ${state.hostName}.`,'success','system');
 }
-async function createAccount(event){
-    event.preventDefault();
-    const hostName=document.getElementById('newHostName')?.value.trim() || '';
-    const id=document.getElementById('newLoginId')?.value.trim() || '';
-    const pass=document.getElementById('newLoginPass')?.value || '';
-    const error=document.getElementById('createAccountError');
-    if(!hostName||!id||!pass){if(error)error.textContent='Fill all fields.';return;}
-    const [idHash, passHash]=await Promise.all([hashCredential(id),hashCredential(pass)]);
-    if(idHash===LOGIN_ID_HASH || getSavedAccounts().some(a=>a.idHash===idHash)){if(error)error.textContent='This ID already exists.';return;}
-    const accounts=getSavedAccounts();
-    accounts.push({idHash,passHash,hostName});
-    saveAccounts(accounts);
-    document.getElementById('loginId').value=id;
-    document.getElementById('loginPass').value=pass;
-    document.getElementById('createAccountForm').reset();
-    showLoginForm();
-    if(error)error.textContent='';
-    if(document.getElementById('loginError'))document.getElementById('loginError').textContent='Account created. Press Enter System.';
+function changeHostName(){
+    const current=state.hostName||getBoundHostName();
+    openModal(`<h3 style="margin-bottom:10px;">CHANGE HOST</h3><input class="modal-input" id="changeHostInput" value="${escapeHtml(current)}" placeholder="Host name"><div class="modal-actions"><button class="modal-btn modal-btn-primary" onclick="confirmHostChange()">SAVE</button><button class="modal-btn modal-btn-secondary" onclick="closeModal()">CANCEL</button></div>`);
 }
-function logoutSystem(){
-    sessionStorage.removeItem('systemPanelAuthenticated');
-    sessionStorage.removeItem('systemPanelAccountType');
-    currentAccountType = null;
-    freezeSystemForLogin();
-    setAuthenticatedView(false);
-    const pass = document.getElementById('loginPass');
-    const error = document.getElementById('loginError');
-    if(pass) pass.value = '';
-    if(error) error.textContent = '';
-    closeModal();
+function confirmHostChange(){
+    const name=document.getElementById('changeHostInput')?.value.trim();
+    if(!name){showNotification('Host Required','Enter a Host name.','error','system');return;}
+    state.hostName=name;setBoundHostName(name);updateUI();autoSave();closeModal();showNotification('Host Updated',name,'success','system');
+}
+function escapeHtml(value){return String(value).replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));}
+
+function unbindHost(){
+    showCustomConfirm('DELETE ACCOUNT','Delete bound Host and all local progress? This cannot be undone.',()=>{localStorage.removeItem('systemPanelSave');localStorage.removeItem('systemPanelSaveBackup');localStorage.removeItem('systemPanelHostName');location.reload();},()=>{});
 }
 
 let realms = ["Awakening Realm","Origin Condensation Realm","Origin Sea Realm","Purple Mansion Realm","True Spirit Realm","Mystic Conception Realm","True Seed Creation Realm","Mortal Transcendence Realm","Longevity Realm","Law Perception Realm","Law Assimilation Realm","Origin Principle Realm","Origin Creation Realm","Dao Evolution Realm","Infinite Great Dao Realm","Transcendence"];
@@ -1577,7 +1442,7 @@ function executeFeatureCreation(name,desc,cost){
 }
 
 // Base features
-let baseFeatureDefinitions={"Storage Space":{effect:"Infinite storage capacity."},"Detection":{effect:"Scan for treasures and threats."},"Deduction":{effect:"Analyze techniques for insight."},"Fusion":{effect:"The Creation Forge. Fuse anything into anything using the Yin-Yang Dao."},"Law Insight":{effect:"Comprehend Dao laws for massive XP."}};
+let baseFeatureDefinitions={"Storage Space":{effect:"Infinite storage capacity."},"Detection":{effect:"Scan for treasures and threats."},"Deduction":{effect:"Analyze techniques for insight."},"Fusion":{effect:"The Creation Forge. Fuse anything into anything using the Yin-Yang Dao."},"Law Insight":{effect:"Comprehend Dao laws for massive XP."},"Treasure Encryption":{effect:"Seal or unseal any HTML/file with AES-256."}};
 
 let heavenDefyingFeatures=[{name:"∞ Devouring Abyss",baseEffect:"Devouring gives 2x EP",upgradeEffect:"Devouring gives 3x EP",heaven:true,effectType:"devour_gain",basePower:100},{name:"Void's Blessing",baseEffect:"Void absorption +100%",upgradeEffect:"Void absorption +200%",heaven:true,effectType:"void_absorption",basePower:100},{name:"Immortal Spell Forge",baseEffect:"Spell training +50% XP",upgradeEffect:"Spell training +100% XP",heaven:true,effectType:"spell_gain",basePower:50},{name:"Dao Heart Enlightenment",baseEffect:"Technique training +50% XP",upgradeEffect:"Technique training +100% XP",heaven:true,effectType:"technique_gain",basePower:50},{name:"Primordial Chaos Fusion",baseEffect:"Fusion cost -50%",upgradeEffect:"Fusion cost -75%",heaven:true,effectType:"fusion_cost",basePower:50},{name:"Eternal Cultivation",baseEffect:"Cultivation cost -30%",upgradeEffect:"Cultivation cost -50%",heaven:true,effectType:"cultivation_cost",basePower:30}];
 let normalFeatures=[{name:"Efficient Absorption",baseEffect:"Void absorption +20%",upgradeEffect:"Void absorption +40%",heaven:false,effectType:"void_absorption",basePower:20},{name:"Spirit Enhancement",baseEffect:"Spell training +15% XP",upgradeEffect:"Spell training +30% XP",heaven:false,effectType:"spell_gain",basePower:15},{name:"Technique Mastery",baseEffect:"Technique training +15% XP",upgradeEffect:"Technique training +30% XP",heaven:false,effectType:"technique_gain",basePower:15},{name:"Fusion Efficiency",baseEffect:"Fusion cost -20%",upgradeEffect:"Fusion cost -40%",heaven:false,effectType:"fusion_cost",basePower:20},{name:"Cultivation Insight",baseEffect:"Cultivation cost -10%",upgradeEffect:"Cultivation cost -20%",heaven:false,effectType:"cultivation_cost",basePower:10},{name:"Devourer's Touch",baseEffect:"Devouring +20% EP",upgradeEffect:"Devouring +40% EP",heaven:false,effectType:"devour_gain",basePower:20}];
@@ -1591,6 +1456,7 @@ function createBaseFeatureUI(name){
     if(name==="Deduction")btn=`<button class="action-btn" onclick="useDeduction()">Analyze</button>`;
     if(name==="Fusion")btn=`<button class="action-btn" style="border-color:var(--accent-primary); color:var(--accent-primary);" onclick="openCreationForgeUI()">Enter Forge</button>`;
     if(name==="Law Insight")btn=`<button class="action-btn" onclick="useLawInsight()">Contemplate</button>`;
+    if(name==="Treasure Encryption")btn=`<button class="action-btn" onclick="openSealingArray()">Use Array</button>`;
     let div=document.createElement('div');div.className='feature-card';
     div.innerHTML=`<div class="feature-header"><span class="feature-title">${name}</span></div><div class="feature-desc">${baseFeatureDefinitions[name]?.effect||''}</div><div>${btn}</div>`;
     container.appendChild(div);
@@ -2118,24 +1984,88 @@ function openSettings(){
     html+=`<div class="feature-card"><div class="settings-collapsible-header" onclick="toggleSettingsSection(this)"><span>INTERFACE</span><span style="font-size:.6rem;">▼</span></div><div class="settings-collapsible-content">
         <div class="settings-row"><span>Collapse All Sections</span><label class="pill-toggle"><input type="checkbox" ${settings.collapseAllSections?'checked':''} onchange="settings.collapseAllSections=this.checked;document.querySelectorAll('.section-content').forEach(c=>c.classList.toggle('collapsed',settings.collapseAllSections));autoSave();"><span class="pill-slider"></span></label></div>
     </div></div>`;
-    html+=`<div class="feature-card"><div class="settings-collapsible-header" onclick="toggleSettingsSection(this)"><span>DATA</span><span style="font-size:.6rem;">▼</span></div><div class="settings-collapsible-content">
-        <button class="modal-btn modal-btn-danger" onclick="resetSystem()">RESET SYSTEM</button>
+    html+=`<div class="feature-card"><div class="settings-collapsible-header" onclick="toggleSettingsSection(this)"><span>DATA & RECOVERY</span><span style="font-size:.6rem;">▼</span></div><div class="settings-collapsible-content">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+            <button class="modal-btn modal-btn-primary" onclick="exportData()">EXPORT DATA</button>
+            <button class="modal-btn modal-btn-secondary" onclick="openImportData()">IMPORT DATA</button>
+            <button class="modal-btn modal-btn-secondary" onclick="restoreBackup()">RECOVER BACKUP</button>
+            <button class="modal-btn modal-btn-danger" onclick="resetSystem()">RESET DATA</button>
+            <button class="modal-btn modal-btn-secondary" onclick="changeHostName()">CHANGE HOST</button>
+            <button class="modal-btn modal-btn-danger" onclick="unbindHost()">DELETE ACCOUNT</button>
+        </div>
+        <button class="modal-btn modal-btn-primary" style="width:100%;" onclick="openSealingArray()">HTML SEALING / UNSEALING</button>
+        <input type="file" id="importDataFile" accept="application/json,.json" style="display:none" onchange="importDataFile(this)">
     </div></div>`;
     html+=`<div class="feature-card"><div class="settings-collapsible-header" onclick="toggleSettingsSection(this)"><span>ETERNAL INFORMATION</span><span style="font-size:.6rem;">▼</span></div><div class="settings-collapsible-content">
         <div class="eternal-text">The System Panel is the manifestation of your own will, Great Dao, and essence. It is the root of your evolution itself.<br><br>The "System Panel" is not something external, nor is it a gift bestowed by another existence. It is your own innate Evolution Root Talent, born as a part of your very existence.<br><br>It will always remain with you, accompanying you through every stage of growth, and will continue to exist alongside you for all eternity.</div>
     </div></div>`;
-    html+=`<div class="modal-actions"><button class="modal-btn modal-btn-danger" onclick="logoutSystem()">LOGOUT</button><button class="modal-btn modal-btn-secondary" onclick="closeModal()">CLOSE</button></div>`;
+    html+=`<div class="modal-actions"><button class="modal-btn modal-btn-secondary" onclick="closeModal()">CLOSE</button></div>`;
     openModal(html);
     setTimeout(()=>{let d=document.getElementById('setNotifDuration');if(d)d.onchange=()=>{settings.notificationDurationMs=parseFloat(d.value)*1000;autoSave();};},50);
 }
 function toggleSettingsSection(hdr){let content=hdr.nextElementSibling;let arrow=hdr.querySelector('span:last-child');if(content.style.display==='none'||content.style.display===''){content.style.display='block';if(arrow)arrow.textContent='▲';}else{content.style.display='none';if(arrow)arrow.textContent='▼';}}
+
+function makeSavePayload(){
+    return {version:2,exportedAt:new Date().toISOString(),hostName:state.hostName,state,voidEnergy,upgradeBonus,unlockedBaseFeatures,heavenFeatures,heavenFeatureLevels,customFeatures,storageItems,notificationHistory,lastOnlineTime,settings,notificationFilters,stats};
+}
+function downloadText(filename,text,type='application/json'){
+    const blob=new Blob([text],{type});
+    const url=URL.createObjectURL(blob);
+    const link=document.createElement('a');link.href=url;link.download=filename;document.body.appendChild(link);link.click();link.remove();URL.revokeObjectURL(url);
+}
+function exportData(){autoSave();downloadText(`system-panel-${(state.hostName||'host').replace(/[^a-z0-9_-]+/gi,'_')}-backup.json`,JSON.stringify(makeSavePayload(),null,2));showNotification('Export Complete','Backup file downloaded.','success','system');}
+function openImportData(){document.getElementById('importDataFile')?.click();}
+function applySavePayload(data){
+    if(!data||typeof data!=='object')throw new Error('Invalid backup file');
+    if(data.state)Object.assign(state,data.state); else if(data.hostName)state.hostName=data.hostName;
+    voidEnergy=data.voidEnergy??voidEnergy;upgradeBonus=data.upgradeBonus??upgradeBonus;
+    unlockedBaseFeatures=data.unlockedBaseFeatures??unlockedBaseFeatures;heavenFeatures=data.heavenFeatures??heavenFeatures;
+    heavenFeatureLevels=data.heavenFeatureLevels??heavenFeatureLevels;customFeatures=data.customFeatures??customFeatures;
+    storageItems=data.storageItems??storageItems;notificationHistory=data.notificationHistory??notificationHistory;
+    if(data.settings)Object.assign(settings,data.settings); if(data.notificationFilters)Object.assign(notificationFilters,data.notificationFilters); if(data.stats)Object.assign(stats,data.stats);
+    lastOnlineTime=data.lastOnlineTime??Date.now(); setBoundHostName(state.hostName||data.hostName||'Host');
+}
+function importDataFile(input){
+    const file=input.files?.[0]; if(!file)return;
+    const reader=new FileReader();
+    reader.onload=()=>{try{applySavePayload(JSON.parse(reader.result));autoSave();updateUI();closeModal();showNotification('Import Complete','Data restored successfully.','success','system');}catch(e){showNotification('Import Failed',e.message,'error','system');}finally{input.value='';}};
+    reader.readAsText(file);
+}
+function restoreBackup(){
+    const backup=localStorage.getItem('systemPanelSaveBackup');
+    if(!backup){showNotification('No Backup','No recovery snapshot found.','warning','system');return;}
+    showCustomConfirm('RECOVER BACKUP','Restore the last automatic recovery snapshot?',()=>{try{applySavePayload(JSON.parse(backup));autoSave();updateUI();closeModal();showNotification('Recovered','Backup restored.','success','system');}catch(e){showNotification('Recover Failed',e.message,'error','system');}},()=>{});
+}
+async function deriveAesKey(password,salt,usage){
+    const baseKey=await crypto.subtle.importKey('raw',new TextEncoder().encode(password),'PBKDF2',false,['deriveKey']);
+    return crypto.subtle.deriveKey({name:'PBKDF2',salt,iterations:150000,hash:'SHA-256'},baseKey,{name:'AES-GCM',length:256},false,usage);
+}
+function bytesToBase64(bytes){let bin='';bytes.forEach(b=>bin+=String.fromCharCode(b));return btoa(bin);}
+function base64ToBytes(text){return Uint8Array.from(atob(text),c=>c.charCodeAt(0));}
+function openSealingArray(){
+    openModal(`<h3 style="margin-bottom:10px;color:var(--accent-primary);text-align:center;">HEAVENLY SEALING ARRAY</h3><p style="font-size:.75rem;color:var(--text-muted);text-align:center;margin-bottom:12px;">Seal any HTML/file with AES-256, or unseal a .sealed file with its password.</p><input class="modal-input" type="file" id="sealFile"><input class="modal-input" type="password" id="sealPass" placeholder="Sealing / Unsealing Password"><div class="modal-actions"><button class="modal-btn modal-btn-primary" onclick="sealSelectedFile()">SEAL</button><button class="modal-btn modal-btn-secondary" onclick="unsealSelectedFile()">UNSEAL</button></div><div class="modal-actions"><button class="modal-btn modal-btn-secondary" onclick="closeModal()">CLOSE</button></div>`);
+}
+async function sealSelectedFile(){
+    const file=document.getElementById('sealFile')?.files?.[0], pass=document.getElementById('sealPass')?.value;
+    if(!file||!pass){showNotification('Seal Failed','Choose file and password.','error','system');return;}
+    const salt=crypto.getRandomValues(new Uint8Array(16)), iv=crypto.getRandomValues(new Uint8Array(12));
+    const key=await deriveAesKey(pass,salt,['encrypt']);
+    const cipher=new Uint8Array(await crypto.subtle.encrypt({name:'AES-GCM',iv},key,await file.arrayBuffer()));
+    const sealed={sealedBy:'System Panel Heavenly Sealing Array',version:1,name:file.name,type:file.type||'application/octet-stream',salt:bytesToBase64(salt),iv:bytesToBase64(iv),data:bytesToBase64(cipher)};
+    downloadText(`${file.name}.sealed.json`,JSON.stringify(sealed),'application/json');showNotification('Sealed','Encrypted file downloaded.','success','system');
+}
+async function unsealSelectedFile(){
+    const file=document.getElementById('sealFile')?.files?.[0], pass=document.getElementById('sealPass')?.value;
+    if(!file||!pass){showNotification('Unseal Failed','Choose sealed file and password.','error','system');return;}
+    try{const sealed=JSON.parse(await file.text());const salt=base64ToBytes(sealed.salt),iv=base64ToBytes(sealed.iv),data=base64ToBytes(sealed.data);const key=await deriveAesKey(pass,salt,['decrypt']);const plain=await crypto.subtle.decrypt({name:'AES-GCM',iv},key,data);const blob=new Blob([plain],{type:sealed.type||'application/octet-stream'});const url=URL.createObjectURL(blob);const link=document.createElement('a');link.href=url;link.download=(sealed.name||file.name.replace(/\.sealed\.json$/,''));document.body.appendChild(link);link.click();link.remove();URL.revokeObjectURL(url);showNotification('Unsealed','Original file downloaded.','success','system');}catch(e){showNotification('Unseal Failed','Wrong password or invalid sealed file.','error','system');}
+}
 function resetSystem(){showCustomConfirm("RESET SYSTEM","WARNING: This will erase all progress and reset the system. Continue?",()=>{localStorage.clear();location.reload();},()=>{});}
 
 function updateUI(){
     try {
         document.getElementById('hostNameDisplay').textContent=state.hostName;
         const statusTitle=document.getElementById('hostStatusTitle');
-        if(statusTitle)statusTitle.textContent=currentAccountType===CREATOR_ACCOUNT?'Creator Status':'Host Status';
+        if(statusTitle)statusTitle.textContent='Host Status';
         let rp=getRealmProgress(state.realmIndex,state.realmLevel);
         document.getElementById('realmDisplay').textContent=getRealmDisplay(state.realmIndex,state.realmLevel);
         document.getElementById('realmProgressFill').style.width=rp.max===Infinity?'0%':rp.pct+'%';
@@ -2187,6 +2117,7 @@ function updateUI(){
                 container.appendChild(customDiv);
             }
             (unlockedBaseFeatures || []).forEach(name => createBaseFeatureUI(name));
+            createBaseFeatureUI("Treasure Encryption");
         }
     } catch(e) {
         console.error("UI Update Failed:", e);
@@ -2208,14 +2139,14 @@ function applyOfflineRewards(){
     if(intervals>0){let rate=getAbsorptionRate(),total=0;for(let i=0;i<Math.min(intervals,200);i++)total+=rand(rate.min,rate.max);voidEnergy+=total;let mins=Math.floor(diffSec/60),hours=Math.floor(mins/60),timeStr=hours>0?`${hours}h ${mins%60}m`:`${mins}m`;if(total>0)showNotification("Offline Reward",`+${total} void energy (${timeStr} away)`,"success","absorption");}
     lastOnlineTime=Date.now();
 }
-function startSystemAfterLogin(){
+function startSystemAfterHostBind(){
     if(systemStarted)return;
     systemStarted=true;
     applyOfflineRewards();
     startAutoAbsorption();
     updateUI();
 }
-function freezeSystemForLogin(){
+function freezeSystem(){
     systemStarted=false;
     if(absorptionInterval){clearInterval(absorptionInterval);absorptionInterval=null;}
     if(autoCultivateInterval)stopAutoCultivation();
@@ -2225,6 +2156,7 @@ function freezeSystemForLogin(){
 
 function autoSave(){
     let data={state,voidEnergy,upgradeBonus,unlockedBaseFeatures,heavenFeatures,heavenFeatureLevels,customFeatures,storageItems,notificationHistory,lastOnlineTime:systemStarted?Date.now():lastOnlineTime,settings,notificationFilters,stats};
+    localStorage.setItem('systemPanelSaveBackup',localStorage.getItem('systemPanelSave')||JSON.stringify(data));
     localStorage.setItem('systemPanelSave',JSON.stringify(data));
     let ind=document.getElementById('saveIndicator');ind.classList.add('visible');setTimeout(()=>ind.classList.remove('visible'),500);
 }
@@ -2248,16 +2180,20 @@ function autoLoad(){
 
 document.addEventListener('DOMContentLoaded',()=>{
     autoLoad();updateUI();
-    const isAuthenticated=sessionStorage.getItem('systemPanelAuthenticated') === 'true';
-    setAuthenticatedView(isAuthenticated);
-    document.getElementById('loginForm').addEventListener('submit',handleLogin);
-    document.getElementById('createAccountForm').addEventListener('submit',createAccount);
+    const boundHost=getBoundHostName();
+    if(boundHost){
+        state.hostName=boundHost;
+        setSystemView(true);
+        startSystemAfterHostBind();
+        if(settings.welcomeNotificationEnabled)showNotification("System Online",`Welcome, ${state.hostName}. The void awaits.`,"success","system");
+    } else {
+        const input=document.getElementById('bindHostName');
+        if(input&&state.hostName)input.value=state.hostName;
+        setSystemView(false);
+    }
+    document.getElementById('hostBindForm').addEventListener('submit',bindHostAndStart);
     document.getElementById('cultivateBtn').addEventListener('click',cultivate);
     if(settings.collapseAllSections)document.querySelectorAll('.section-content').forEach(c=>c.classList.add('collapsed'));
-    if(isAuthenticated){
-        startSystemAfterLogin();
-        if(settings.welcomeNotificationEnabled)showNotification("System Online",`Welcome, ${state.hostName}. The void awaits.`,"success","system");
-    }
 });
 window.addEventListener('beforeunload',()=>autoSave());
 </script>
