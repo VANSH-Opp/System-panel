@@ -1102,15 +1102,6 @@ function bindHostAndStart(event){
     autoSave();
     showNotification('System Bound',`Welcome, ${state.hostName}.`,'success','system');
 }
-function changeHostName(){
-    const current=state.hostName||getBoundHostName();
-    openModal(`<h3 style="margin-bottom:10px;">CHANGE HOST</h3><input class="modal-input" id="changeHostInput" value="${escapeHtml(current)}" placeholder="Host name"><div class="modal-actions"><button class="modal-btn modal-btn-primary" onclick="confirmHostChange()">SAVE</button><button class="modal-btn modal-btn-secondary" onclick="closeModal()">CANCEL</button></div>`);
-}
-function confirmHostChange(){
-    const name=document.getElementById('changeHostInput')?.value.trim();
-    if(!name){showNotification('Host Required','Enter a Host name.','error','system');return;}
-    state.hostName=name;setBoundHostName(name);updateUI();autoSave();closeModal();showNotification('Host Updated',name,'success','system');
-}
 function escapeHtml(value){return String(value).replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));}
 
 function unbindHost(){
@@ -1140,7 +1131,7 @@ let stats = {
 };
 
 let voidEnergy=0, upgradeBonus=0;
-let unlockedBaseFeatures=[], heavenFeatures=[], heavenFeatureLevels={}, customFeatures=[], storageItems=[];
+let unlockedBaseFeatures=["Storage Space","Sealing Dao"], heavenFeatures=[], heavenFeatureLevels={}, customFeatures=[], storageItems=[];
 let notificationHistory=[], lastOnlineTime=null;
 let autoCultivateInterval=null, absorptionInterval=null, currentNotification=null;
 
@@ -1380,7 +1371,7 @@ function showRandomUpgrade(){
 }
 function executeRandomUpgrade(cost){
     state.ep-=cost;stats.totalEPSpent+=cost;state.level++;upgradeBonus=(state.level-1)*10;
-    let base=["Storage Space","Detection","Deduction","Fusion","Law Insight"][state.level-2];
+    let base=["Detection","Deduction","Fusion","Law Insight"][state.level-2];
     if(base&&!unlockedBaseFeatures.includes(base)){unlockedBaseFeatures.push(base);createBaseFeatureUI(base);}
     let isHeaven=Math.random()<0.3;
     let pool=isHeaven?heavenDefyingFeatures:normalFeatures;
@@ -1410,7 +1401,7 @@ function executeCustomUpgrade(name,cost,isHeaven){
     let src=isHeaven?heavenDefyingFeatures:normalFeatures;
     let f=src.find(x=>x.name===name);if(!f)return;
     state.ep-=cost;stats.totalEPSpent+=cost;state.level++;upgradeBonus=(state.level-1)*10;
-    let base=["Storage Space","Detection","Deduction","Fusion","Law Insight"][state.level-2];
+    let base=["Detection","Deduction","Fusion","Law Insight"][state.level-2];
     if(base&&!unlockedBaseFeatures.includes(base)){unlockedBaseFeatures.push(base);createBaseFeatureUI(base);}
     let ex=heavenFeatures.find(x=>x.name===name);
     if(ex)heavenFeatureLevels[name]=(heavenFeatureLevels[name]||1)+1;
@@ -1434,7 +1425,7 @@ function confirmFeatureCreation(cost){
 }
 function executeFeatureCreation(name,desc,cost){
     state.ep-=cost;stats.totalEPSpent+=cost;state.level++;upgradeBonus=(state.level-1)*10;
-    let base=["Storage Space","Detection","Deduction","Fusion","Law Insight"][state.level-2];
+    let base=["Detection","Deduction","Fusion","Law Insight"][state.level-2];
     if(base&&!unlockedBaseFeatures.includes(base)){unlockedBaseFeatures.push(base);createBaseFeatureUI(base);}
     customFeatures.push({name,concept:desc});
     showNotification("Custom Feature Created",name,"warning","system");
@@ -1442,7 +1433,7 @@ function executeFeatureCreation(name,desc,cost){
 }
 
 // Base features
-let baseFeatureDefinitions={"Storage Space":{effect:"Infinite storage capacity."},"Detection":{effect:"Scan for treasures and threats."},"Deduction":{effect:"Analyze techniques for insight."},"Fusion":{effect:"The Creation Forge. Fuse anything into anything using the Yin-Yang Dao."},"Law Insight":{effect:"Comprehend Dao laws for massive XP."},"Treasure Encryption":{effect:"Seal or unseal any HTML/file with AES-256."}};
+let baseFeatureDefinitions={"Storage Space":{effect:"Infinite storage capacity."},"Detection":{effect:"Scan for treasures and threats."},"Deduction":{effect:"Analyze techniques for insight."},"Fusion":{effect:"The Creation Forge. Fuse anything into anything using the Yin-Yang Dao."},"Law Insight":{effect:"Comprehend Dao laws for massive XP."},"Sealing Dao":{effect:"Seal or unseal any HTML/file with AES-256."}};
 
 let heavenDefyingFeatures=[{name:"∞ Devouring Abyss",baseEffect:"Devouring gives 2x EP",upgradeEffect:"Devouring gives 3x EP",heaven:true,effectType:"devour_gain",basePower:100},{name:"Void's Blessing",baseEffect:"Void absorption +100%",upgradeEffect:"Void absorption +200%",heaven:true,effectType:"void_absorption",basePower:100},{name:"Immortal Spell Forge",baseEffect:"Spell training +50% XP",upgradeEffect:"Spell training +100% XP",heaven:true,effectType:"spell_gain",basePower:50},{name:"Dao Heart Enlightenment",baseEffect:"Technique training +50% XP",upgradeEffect:"Technique training +100% XP",heaven:true,effectType:"technique_gain",basePower:50},{name:"Primordial Chaos Fusion",baseEffect:"Fusion cost -50%",upgradeEffect:"Fusion cost -75%",heaven:true,effectType:"fusion_cost",basePower:50},{name:"Eternal Cultivation",baseEffect:"Cultivation cost -30%",upgradeEffect:"Cultivation cost -50%",heaven:true,effectType:"cultivation_cost",basePower:30}];
 let normalFeatures=[{name:"Efficient Absorption",baseEffect:"Void absorption +20%",upgradeEffect:"Void absorption +40%",heaven:false,effectType:"void_absorption",basePower:20},{name:"Spirit Enhancement",baseEffect:"Spell training +15% XP",upgradeEffect:"Spell training +30% XP",heaven:false,effectType:"spell_gain",basePower:15},{name:"Technique Mastery",baseEffect:"Technique training +15% XP",upgradeEffect:"Technique training +30% XP",heaven:false,effectType:"technique_gain",basePower:15},{name:"Fusion Efficiency",baseEffect:"Fusion cost -20%",upgradeEffect:"Fusion cost -40%",heaven:false,effectType:"fusion_cost",basePower:20},{name:"Cultivation Insight",baseEffect:"Cultivation cost -10%",upgradeEffect:"Cultivation cost -20%",heaven:false,effectType:"cultivation_cost",basePower:10},{name:"Devourer's Touch",baseEffect:"Devouring +20% EP",upgradeEffect:"Devouring +40% EP",heaven:false,effectType:"devour_gain",basePower:20}];
@@ -1456,7 +1447,7 @@ function createBaseFeatureUI(name){
     if(name==="Deduction")btn=`<button class="action-btn" onclick="useDeduction()">Analyze</button>`;
     if(name==="Fusion")btn=`<button class="action-btn" style="border-color:var(--accent-primary); color:var(--accent-primary);" onclick="openCreationForgeUI()">Enter Forge</button>`;
     if(name==="Law Insight")btn=`<button class="action-btn" onclick="useLawInsight()">Contemplate</button>`;
-    if(name==="Treasure Encryption")btn=`<button class="action-btn" onclick="openSealingArray()">Use Array</button>`;
+    if(name==="Sealing Dao")btn=`<button class="action-btn" onclick="openSealingArray()">Use Array</button>`;
     let div=document.createElement('div');div.className='feature-card';
     div.innerHTML=`<div class="feature-header"><span class="feature-title">${name}</span></div><div class="feature-desc">${baseFeatureDefinitions[name]?.effect||''}</div><div>${btn}</div>`;
     container.appendChild(div);
@@ -1985,16 +1976,11 @@ function openSettings(){
         <div class="settings-row"><span>Collapse All Sections</span><label class="pill-toggle"><input type="checkbox" ${settings.collapseAllSections?'checked':''} onchange="settings.collapseAllSections=this.checked;document.querySelectorAll('.section-content').forEach(c=>c.classList.toggle('collapsed',settings.collapseAllSections));autoSave();"><span class="pill-slider"></span></label></div>
     </div></div>`;
     html+=`<div class="feature-card"><div class="settings-collapsible-header" onclick="toggleSettingsSection(this)"><span>DATA & RECOVERY</span><span style="font-size:.6rem;">▼</span></div><div class="settings-collapsible-content">
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
             <button class="modal-btn modal-btn-primary" onclick="exportData()">EXPORT DATA</button>
-            <button class="modal-btn modal-btn-secondary" onclick="openImportData()">IMPORT DATA</button>
-            <button class="modal-btn modal-btn-secondary" onclick="restoreBackup()">RECOVER BACKUP</button>
-            <button class="modal-btn modal-btn-danger" onclick="resetSystem()">RESET DATA</button>
-            <button class="modal-btn modal-btn-secondary" onclick="changeHostName()">CHANGE HOST</button>
-            <button class="modal-btn modal-btn-danger" onclick="unbindHost()">DELETE ACCOUNT</button>
+            <button class="modal-btn modal-btn-secondary" onclick="openImportRecover()">IMPORT / RECOVER</button>
+            <button class="modal-btn modal-btn-danger" style="grid-column:1 / -1;" onclick="unbindHost()">DELETE ACCOUNT</button>
         </div>
-        <button class="modal-btn modal-btn-primary" style="width:100%;" onclick="openSealingArray()">HTML SEALING / UNSEALING</button>
-        <input type="file" id="importDataFile" accept="application/json,.json" style="display:none" onchange="importDataFile(this)">
     </div></div>`;
     html+=`<div class="feature-card"><div class="settings-collapsible-header" onclick="toggleSettingsSection(this)"><span>ETERNAL INFORMATION</span><span style="font-size:.6rem;">▼</span></div><div class="settings-collapsible-content">
         <div class="eternal-text">The System Panel is the manifestation of your own will, Great Dao, and essence. It is the root of your evolution itself.<br><br>The "System Panel" is not something external, nor is it a gift bestowed by another existence. It is your own innate Evolution Root Talent, born as a part of your very existence.<br><br>It will always remain with you, accompanying you through every stage of growth, and will continue to exist alongside you for all eternity.</div>
@@ -2014,12 +2000,12 @@ function downloadText(filename,text,type='application/json'){
     const link=document.createElement('a');link.href=url;link.download=filename;document.body.appendChild(link);link.click();link.remove();URL.revokeObjectURL(url);
 }
 function exportData(){autoSave();downloadText(`system-panel-${(state.hostName||'host').replace(/[^a-z0-9_-]+/gi,'_')}-backup.json`,JSON.stringify(makeSavePayload(),null,2));showNotification('Export Complete','Backup file downloaded.','success','system');}
-function openImportData(){document.getElementById('importDataFile')?.click();}
+function openImportRecover(){openModal(`<h3 style="margin-bottom:10px;">IMPORT / RECOVER</h3><p style="font-size:.75rem;color:var(--text-muted);margin-bottom:10px;">Import a backup JSON or recover the last automatic snapshot.</p><input class="modal-input" type="file" id="importDataFile" accept="application/json,.json" onchange="importDataFile(this)"><div class="modal-actions"><button class="modal-btn modal-btn-secondary" onclick="restoreBackup()">RECOVER BACKUP</button><button class="modal-btn modal-btn-secondary" onclick="openSettings()">BACK</button></div>`);}
 function applySavePayload(data){
     if(!data||typeof data!=='object')throw new Error('Invalid backup file');
     if(data.state)Object.assign(state,data.state); else if(data.hostName)state.hostName=data.hostName;
     voidEnergy=data.voidEnergy??voidEnergy;upgradeBonus=data.upgradeBonus??upgradeBonus;
-    unlockedBaseFeatures=data.unlockedBaseFeatures??unlockedBaseFeatures;heavenFeatures=data.heavenFeatures??heavenFeatures;
+    unlockedBaseFeatures=[...new Set(["Storage Space","Sealing Dao",...(data.unlockedBaseFeatures??unlockedBaseFeatures)])];heavenFeatures=data.heavenFeatures??heavenFeatures;
     heavenFeatureLevels=data.heavenFeatureLevels??heavenFeatureLevels;customFeatures=data.customFeatures??customFeatures;
     storageItems=data.storageItems??storageItems;notificationHistory=data.notificationHistory??notificationHistory;
     if(data.settings)Object.assign(settings,data.settings); if(data.notificationFilters)Object.assign(notificationFilters,data.notificationFilters); if(data.stats)Object.assign(stats,data.stats);
@@ -2043,7 +2029,7 @@ async function deriveAesKey(password,salt,usage){
 function bytesToBase64(bytes){let bin='';bytes.forEach(b=>bin+=String.fromCharCode(b));return btoa(bin);}
 function base64ToBytes(text){return Uint8Array.from(atob(text),c=>c.charCodeAt(0));}
 function openSealingArray(){
-    openModal(`<h3 style="margin-bottom:10px;color:var(--accent-primary);text-align:center;">HEAVENLY SEALING ARRAY</h3><p style="font-size:.75rem;color:var(--text-muted);text-align:center;margin-bottom:12px;">Seal any HTML/file with AES-256, or unseal a .sealed file with its password.</p><input class="modal-input" type="file" id="sealFile"><input class="modal-input" type="password" id="sealPass" placeholder="Sealing / Unsealing Password"><div class="modal-actions"><button class="modal-btn modal-btn-primary" onclick="sealSelectedFile()">SEAL</button><button class="modal-btn modal-btn-secondary" onclick="unsealSelectedFile()">UNSEAL</button></div><div class="modal-actions"><button class="modal-btn modal-btn-secondary" onclick="closeModal()">CLOSE</button></div>`);
+    openModal(`<h3 style="margin-bottom:10px;color:var(--accent-primary);text-align:center;">SEALING DAO</h3><p style="font-size:.75rem;color:var(--text-muted);text-align:center;margin-bottom:12px;">Seal any HTML/file with AES-256, or unseal a .sealed file with its password.</p><input class="modal-input" type="file" id="sealFile"><input class="modal-input" type="password" id="sealPass" placeholder="Sealing / Unsealing Password"><div class="modal-actions"><button class="modal-btn modal-btn-primary" onclick="sealSelectedFile()">SEAL</button><button class="modal-btn modal-btn-secondary" onclick="unsealSelectedFile()">UNSEAL</button></div><div class="modal-actions"><button class="modal-btn modal-btn-secondary" onclick="closeModal()">CLOSE</button></div>`);
 }
 async function sealSelectedFile(){
     const file=document.getElementById('sealFile')?.files?.[0], pass=document.getElementById('sealPass')?.value;
@@ -2051,7 +2037,7 @@ async function sealSelectedFile(){
     const salt=crypto.getRandomValues(new Uint8Array(16)), iv=crypto.getRandomValues(new Uint8Array(12));
     const key=await deriveAesKey(pass,salt,['encrypt']);
     const cipher=new Uint8Array(await crypto.subtle.encrypt({name:'AES-GCM',iv},key,await file.arrayBuffer()));
-    const sealed={sealedBy:'System Panel Heavenly Sealing Array',version:1,name:file.name,type:file.type||'application/octet-stream',salt:bytesToBase64(salt),iv:bytesToBase64(iv),data:bytesToBase64(cipher)};
+    const sealed={sealedBy:'System Panel Sealing Dao',version:1,name:file.name,type:file.type||'application/octet-stream',salt:bytesToBase64(salt),iv:bytesToBase64(iv),data:bytesToBase64(cipher)};
     downloadText(`${file.name}.sealed.json`,JSON.stringify(sealed),'application/json');showNotification('Sealed','Encrypted file downloaded.','success','system');
 }
 async function unsealSelectedFile(){
@@ -2117,7 +2103,6 @@ function updateUI(){
                 container.appendChild(customDiv);
             }
             (unlockedBaseFeatures || []).forEach(name => createBaseFeatureUI(name));
-            createBaseFeatureUI("Treasure Encryption");
         }
     } catch(e) {
         console.error("UI Update Failed:", e);
@@ -2166,7 +2151,7 @@ function autoLoad(){
         let data=JSON.parse(saved);
         Object.assign(state,data.state);
         voidEnergy=data.voidEnergy??0;upgradeBonus=data.upgradeBonus??0;
-        unlockedBaseFeatures=data.unlockedBaseFeatures??[];heavenFeatures=data.heavenFeatures??[];
+        unlockedBaseFeatures=[...new Set(["Storage Space","Sealing Dao",...(data.unlockedBaseFeatures??[])])];heavenFeatures=data.heavenFeatures??[];
         heavenFeatureLevels=data.heavenFeatureLevels??{};customFeatures=data.customFeatures??[];
         storageItems=data.storageItems??[];notificationHistory=data.notificationHistory??[];
         if(data.settings)Object.assign(settings,data.settings);
